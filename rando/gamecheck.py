@@ -13,7 +13,7 @@ TITLE_ID = "0400486024dec000"
 
 # SHA-256 of exefs/main -> description shown to the user
 KNOWN_VERSIONS = {
-    "7db9ddfda088c22d219ef13496decd7077c68cd67d4b37f53f4ac46a082768f2": "build e0f3ccfa",
+    "7db9ddfda088c22d219ef13496decd7077c68cd67d4b37f53f4ac46a082768f2": "v1.1.1",
 }
 
 _cache = {}   # (path, size, mtime) -> sha256, so re-checking the same file is instant

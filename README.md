@@ -16,6 +16,8 @@ only the files it changes into a new mod folder. Share seeds and settings string
 >
 > Your test reports are what makes it better; see [Testing and reporting problems](#testing-and-reporting-problems).
 
+[Disclamer] Yes claude was used with the production of this. It accelerates that type of stuff much faster.
+
 ## Contents
 
 - [What you need](#what-you-need)
@@ -259,7 +261,7 @@ broken mod, it only runs on game versions it has been checked against. It comput
 
 | Game version | SHA-256 of `exefs/main` |
 |---|---|
-| build e0f3ccfa | `7db9ddfda088c22d219ef13496decd7077c68cd67d4b37f53f4ac46a082768f2` |
+| 1.1.1 | `7db9ddfda088c22d219ef13496decd7077c68cd67d4b37f53f4ac46a082768f2` |
 
 If your version isn't supported, the randomizer says so and won't generate. Your game is probably older or
 newer than the one this release supports: update the game and the randomizer to their latest versions. If
