@@ -16,7 +16,8 @@ only the files it changes into a new mod folder. Share seeds and settings string
 >
 > Your test reports are what makes it better; see [Testing and reporting problems](#testing-and-reporting-problems).
 
-[Disclamer] Yes claude was used with the production of this. It accelerates that type of stuff much faster.
+
+[Disclamer] Yes claude was used with the production of this. It accelerates that type of stuff much faster. I know how to program, but something like this would take days or weeks instead of a few hours
 =======
 
 ## Contents
