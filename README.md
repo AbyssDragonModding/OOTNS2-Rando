@@ -16,6 +16,8 @@ only the files it changes into a new mod folder. Share seeds and settings string
 >
 > Your test reports are what makes it better; see [Testing and reporting problems](#testing-and-reporting-problems).
 
+[Desclaimer] Yes Claude was used in production of this, it makes this type of thing much faster to get to testing
+
 ## Contents
 
 - [What you need](#what-you-need)
