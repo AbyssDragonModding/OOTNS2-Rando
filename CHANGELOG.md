@@ -4,6 +4,63 @@ All notable changes to the randomizer. Versions are `Major.Minor.Patch`: a new s
 minor version, a fix raises the patch version. The same seed and settings string make a different mod in a
 different version.
 
+## 0.4.4 - 2026-11-12
+
+### Fixed
+- **Skip Child Zelda**: about 1 in 15 setting combinations couldn't be generated ("no item the save can
+  grant for HC Malon Egg / HC Zeldas Letter / Song from Impa"). The three checks a new save already owns
+  need items the save can simply be given, and with Shopsanity, a Scarce/Minimal pool or Weird Egg shuffle
+  the leftover items sometimes had none. The generator now moves a suitable item there from another check
+  and puts junk in its place. Found by a 6,810-seed fill simulation.
+- **Zora's Fountain: Open**: King Zora was moved aside at first, but after leaving Jabu-Jabu's Belly he sat
+  in front of the door again, a softlock. The first arrival in Zora's Domain set the Zora quest back to its
+  "first visit" step, and he only showed it after the area reloaded. That arrival now keeps the quest where
+  Open starts it. Not yet tested in-game.
+- **Tokensanity**: an item dropped by a Gold Skulltula on a vine or wall needed A to pick up, which you can't
+  press while climbing, so it could only be collected with the Boomerang or Hookshot.
+- **Shuffle Freestanding Items / Freestanding Rupees**: shuffled items lying in the world also needed A
+  (for example the rupee spots at Zora's River).
+
+  Shuffled items in the world are now collected by walking into them, like rupees. Pieces of Heart and
+  Ruto's Letter still need A, because they use their own pickup logic. For that reason the randomizer no
+  longer puts them on Gold Skulltulas. Not yet tested in-game.
+
+- **Door of Time: Closed** logic: going to adult now also expects an ocarina and Zelda met (Impa's send-off
+  is a step of the Door of Time quest). The two moat checks (Song from Ocarina of Time, HF Ocarina of Time)
+  expect the same. Before, both were only implied by other rules.
+
+### Changed
+- **Labels from the 0.4.3 test run (seed W68ETAG92L):** these passed in-game and are no longer tagged:
+  Skip Child Zelda, Shuffle Spiritual Stones/Medallions, Shuffle Weird Egg, Shuffle Ocarinas, Shuffle
+  Freestanding Rupees, Shuffle Great Fairy Rewards, Shuffle Skulltula House Rewards, Maps & Compasses' Start
+  With, Skip Kaepora Gaebora and Small Chests Only. Zora's Fountain's Open stays (needs further testing):
+  King Zora is back in front of the door after leaving Jabu-Jabu's Belly. Still (experimental) because
+  untested or only tested off: Door of Time's Open (the tag moved from the whole setting to that option),
+  Skip Epona Race, Shuffle Kokiri Sword, Shopsanity, Big Poe
+  Buyer Needs Only 1 Big Poe, Skip Area Intro Cutscenes, Excluded Locations and the other options already
+  marked.
+- **Door of Time: Closed**: when the Spiritual Stones are shuffled, all three are now placed where child Link
+  can reach them, so you hold them before going to adult as in the original. The game itself still only
+  checks the three child dungeons. The medallions are unchanged.
+
+### Added
+- **One-click setup** for people who don't code:
+  - `Setup (Windows).bat` installs Python 3.14 for your user if needed (winget, or the python.org
+    installer), installs `requirements.txt` and makes `.py`/`.pyw` files open with Python.
+  - `setup_linux.sh` does the same on Linux. It uses your package manager, or uv as a fallback; asks
+    before using sudo; installs the packages into a private `.venv`; and adds a menu entry plus a `.pyw`
+    association.
+  - `Start Randomizer (Windows).bat` and `run_linux.sh` open the randomizer and install any missing
+    packages first.
+  - `Install Requirements.bat` is replaced by the setup script.
+- **README**: a step-by-step Setup guide (game files, download, setup, start, updating, troubleshooting).
+
+### Checked
+- **Door of Time: Closed** accepts either ocarina: the altar only checks the quest step, not which ocarina
+  you hold, so no patch is needed. In a simulation of 540 seeds across forest, reward, song, ocarina and
+  Skip Child Zelda combinations, the three child dungeons, an ocarina and the Song of Time were always
+  reachable as child.
+
 ## 0.4.3 - 2026-11-11
 
 ### Fixed

@@ -23,7 +23,7 @@ only the files it changes into a new mod folder. Share seeds and settings string
 ## Contents
 
 - [What you need](#what-you-need)
-- [Setup (Windows)](#setup-windows)
+- [Setup](#setup)
 - [Making a seed](#making-a-seed)
 - [Installing the seed in your emulator](#installing-the-seed-in-your-emulator)
 - [Testing and reporting problems](#testing-and-reporting-problems)
@@ -37,7 +37,7 @@ only the files it changes into a new mod folder. Share seeds and settings string
 ## What you need
 
 - A PC with a graphics driver that supports **Vulkan** (any recent NVIDIA, AMD or Intel driver).
-- **Python 3.14 or newer.** The setup steps below cover installing it.
+- **Python 3.14 or newer.** The setup script installs it for you (see [Setup](#setup)).
 - **Your own extracted romfs and exefs** of the game. The romfs is the folder that contains `Banc`, `Event`,
   `Pack`, `RSDB`, `System` and so on; the exefs contains `main` and `main.npdm`. Most Switch emulators can
   extract both: right-click the game in the game list and choose the *Extract RomFS* / *Dump RomFS* and
@@ -45,70 +45,131 @@ only the files it changes into a new mod folder. Share seeds and settings string
   the randomizer find the exefs by itself.
 - **A supported game version.** See [Supported game versions](#supported-game-versions).
 
-## Setup (Windows)
+## Setup
 
-You only do this once. Nothing here needs the command line.
+You only do this once, and you don't need to know anything about programming. The randomizer is a Python
+program: **Python** is the free program that runs it, and the setup script installs Python and everything
+else for you.
 
-### 1. Install Python
+**What you'll end up with:** a randomizer folder you double-click to open, plus your own game files
+(romfs and exefs) that you choose inside the randomizer.
 
-1. Go to [python.org/downloads](https://www.python.org/downloads/) and click the **Download Python 3.14**
-   button (any newer version works too).
-2. Run the installer you downloaded.
-3. On the first screen, **tick "Add python.exe to PATH"** at the bottom, then click **Install Now**.
-4. When it says "Setup was successful", click **Close**.
+### Step 1: Get your game files ready
 
-Use the installer from python.org rather than the Microsoft Store version. The python.org installer also sets
-up double-clicking `.pyw` files, which is how the randomizer is started.
+The randomizer reads the game from your own dump; it never comes with any game files.
 
-### 2. Download the randomizer
+1. In your Switch emulator, right-click the game in the game list.
+2. Choose **Extract RomFS** (some emulators call it **Dump RomFS**) and save it to a folder.
+3. Do the same with **Extract ExeFS** / **Dump ExeFS**.
+4. Keep both next to each other, for example:
+   ```
+   D:\Games\OoT Remake\romfs\     <- has folders like Banc, Event, Pack, RSDB, System
+   D:\Games\OoT Remake\exefs\     <- has the files main and main.npdm
+   ```
 
-1. On this repository's GitHub page, click the green **Code** button, then **Download ZIP**.
-2. Right-click the downloaded ZIP and choose **Extract All...**. Put the folder anywhere you like, but **not
-   inside your romfs folder**.
+### Step 2: Download the randomizer
 
-Don't run the randomizer from inside the ZIP; Windows only extracts it to a temporary folder.
+1. Open this project's GitHub page and click the green **Code** button, then **Download ZIP**.
+2. Find the ZIP in your Downloads folder, **right-click it and choose Extract All...** (on Linux: right-click >
+   *Extract Here*). Put the extracted folder somewhere easy to find, like your Desktop or Documents.
+   - Don't put it inside your romfs folder.
+   - Don't run anything straight from inside the ZIP. Always extract it first.
 
-### 3. Install the requirements
+The extracted folder looks like this. These are the files you'll use:
 
-Open the extracted folder and **double-click `Install Requirements.bat`**. A black window opens and installs
-the two packages listed in `requirements.txt`:
-
-| Package | Used for |
+| File | What it's for |
 |---|---|
-| `raven-gui` | The randomizer's window (the GUI) |
-| `openpyxl` | Writing `checklist.xlsx`, the formatted test checklist |
+| `Setup (Windows).bat` | **Windows:** installs everything. Run it once. |
+| `Start Randomizer (Windows).bat` | **Windows:** opens the randomizer. |
+| `setup_linux.sh` | **Linux:** installs everything. Run it once. |
+| `run_linux.sh` | **Linux:** opens the randomizer. |
+| `ootr_remake.pyw` | The randomizer itself. Double-clicking it also works once setup is done. |
 
-Wait for "Done", then press any key to close the window. Run it again whenever you download a new version of
-the randomizer.
+### Step 3 (Windows): Run the setup
 
-If Windows shows "Windows protected your PC", click **More info** and then **Run anyway**. The file is a short
-text script; you can right-click it and choose **Edit** to read it first.
+1. Open the randomizer folder and **double-click `Setup (Windows).bat`**.
+2. If Windows shows a blue box saying **"Windows protected your PC"**, click **More info**, then **Run
+   anyway**. This shows up for any script downloaded from the internet. The file is plain text: right-click it
+   and choose **Edit** if you want to read what it does first.
+3. A black window opens and works through three steps:
+   1. **Python:** if you don't have Python 3.14 or newer, it installs Python 3.14 just for your Windows user
+      (no administrator password). It uses *winget* (built into Windows 10 and 11) or downloads the
+      official installer from python.org. This can take a minute or two, and no installer window appears.
+   2. **Packages:** it installs the extra pieces the randomizer needs, listed in `requirements.txt`. These
+      are the window (`raven-gui`), the checklist spreadsheet (`openpyxl`) and the item tracker's icons
+      (`texture2ddecoder`, `pillow`).
+   3. **File association:** it makes `.py` and `.pyw` files open with Python when you double-click them.
+      This only changes your own user's settings.
+4. When it says **"Setup finished"**, press any key to close the window.
 
-### 4. Start the randomizer
+If it says *"Python was installed, but this window can't see it yet"*, close the window and double-click
+`Setup (Windows).bat` again. Windows only notices a new program in newly opened windows.
 
-**Double-click `ootr_remake.pyw`.** The randomizer window opens.
+### Step 3 (Linux): Run the setup
 
-- **It opens in Notepad, or Windows asks which app to use:** right-click `ootr_remake.pyw`, choose **Open with**
-  > **Choose another app**, pick **Python** (the icon with the rocket, "pythonw"), tick **Always use this app**
-  and click **OK**.
-- **A message box says something is missing:** do what it says (usually run `Install Requirements.bat` again).
-- **It crashes:** the message box names an `error_log.txt` file in the randomizer folder. Attach it when you
-  report the problem.
-- **For a desktop shortcut:** right-click `ootr_remake.pyw` > **Show more options** > **Send to** >
-  **Desktop (create shortcut)**.
+1. Open the randomizer folder in your file manager, right-click an empty spot and choose **Open in
+   Terminal** (or open a terminal and `cd` into the folder).
+2. Type this and press Enter:
+   ```bash
+   bash setup_linux.sh
+   ```
+3. If Python 3.14 isn't installed, it asks before installing it. It uses your package manager (apt, dnf,
+   pacman or zypper), which asks for your password (`sudo`). If your distribution doesn't have 3.14 yet, it
+   offers to use [uv](https://docs.astral.sh/uv/) instead, which installs Python into your home folder
+   without a password.
+4. It then makes a private Python environment in a `.venv` folder inside the randomizer folder and
+   installs the packages there. Nothing goes into your system Python.
+5. Finally it adds **OoT Remake Randomizer** to your application menu and makes `.pyw` files open with
+   Python. It doesn't do this for `.py` files, so they still open in your text editor.
 
-### macOS and Linux
+You also need a **Vulkan graphics driver**. Most distributions already have one; the setup warns you if it
+can't find `vulkaninfo`.
 
-These aren't tested. Install Python 3.14+ and a Vulkan driver, then run these once in a terminal opened in the
-randomizer folder:
+### Step 4: Start the randomizer
+
+- **Windows:** double-click **`Start Randomizer (Windows).bat`** (or `ootr_remake.pyw`).
+- **Linux:** open **OoT Remake Randomizer** from your application menu, double-click `ootr_remake.pyw`, or run
+  `./run_linux.sh` in a terminal.
+
+The start scripts check that everything is still installed and fix it if not, for example after you download
+a new version. If Python is missing entirely, they run the setup for you.
+
+**Desktop shortcut (Windows):** right-click `Start Randomizer (Windows).bat` > **Show more options** > **Send
+to** > **Desktop (create shortcut)**.
+
+### Updating to a new version
+
+Download and extract the new ZIP the same way. You can delete the old folder, but keep your output folder
+with your seeds. Then just start the randomizer. The start script installs any new packages automatically,
+and running the setup again is never harmful.
+
+### If something goes wrong
+
+| What you see | What to do |
+|---|---|
+| "Windows protected your PC" | Click **More info**, then **Run anyway**. |
+| `ootr_remake.pyw` opens in Notepad, or Windows asks which app to use | Use `Start Randomizer (Windows).bat` instead, or right-click the file > **Open with** > **Choose another app** > **Python** > tick **Always**. |
+| "Python 3.14 or newer is required" | Run the setup again. If you installed Python yourself, make sure it's 3.14 or newer. |
+| "The GUI library isn't installed yet" | Run the setup again (it needs an internet connection). |
+| The window doesn't open, or closes straight away | Your graphics driver may not support Vulkan. Update it from NVIDIA, AMD or Intel. |
+| "The randomizer crashed" | It names an `error_log.txt` file in the randomizer folder. Attach that file when you [open an issue](#opening-an-issue). |
+| The setup says the download failed | Check your internet connection. You can also install Python 3.14 yourself from [python.org/downloads](https://www.python.org/downloads/) (tick **"Add python.exe to PATH"**) and run the setup again. |
+
+### Doing it by hand (for those who prefer to)
+
+Install Python 3.14 or newer from [python.org](https://www.python.org/downloads/) (Windows: tick **Add
+python.exe to PATH**), then in a terminal in the randomizer folder:
 
 ```bash
-python3 -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ```bash
-python3 ootr_remake.pyw
+python ootr_remake.pyw
 ```
+
+On Linux use `python3.14` (or a virtual environment) in place of `python`. macOS isn't tested, but the same
+two commands should work with Python 3.14 from python.org.
 
 ## Making a seed
 
@@ -239,7 +300,7 @@ The GUI explains every option when you hover over it. In short:
 
 | Tab | What you can change |
 |---|---|
-| **Main Rules** | Logic (glitchless or none); open Kokiri Forest, Zora's Fountain, the Door of Time and Death Mountain; skip child Zelda (experimental); skip Epona's race; Saria's Song with just an ocarina; what gets shuffled: songs, Spiritual Stones and Medallions (experimental, in boss rewards or anywhere), Kokiri Sword, Weird Egg, ocarinas, freestanding items, freestanding rupees, boss Heart Containers, NPC and minigame rewards, Great Fairies, Skulltula House rewards, Gold Skulltula tokens (Tokensanity) and shop items (Shopsanity) |
+| **Main Rules** | Logic (glitchless or none); open Kokiri Forest, Zora's Fountain, the Door of Time and Death Mountain; skip child Zelda; skip Epona's race (experimental); Saria's Song with just an ocarina; what gets shuffled: songs, Spiritual Stones and Medallions (in boss rewards or anywhere), Kokiri Sword, Weird Egg, ocarinas, freestanding items, freestanding rupees, boss Heart Containers, NPC and minigame rewards, Great Fairies, Skulltula House rewards, Gold Skulltula tokens (Tokensanity) and shop items (Shopsanity) |
 | **Dungeon Items** | Maps & Compasses (vanilla, own dungeon, removed or start with), small keys and boss keys |
 | **Other** | Item pool size; quality of life (skippable cutscenes, no area intros (experimental), bombs without the Goron Bracelet, bag bombs open Dodongo's Cavern, Anju needs 1 cucco, ammo chests need their bag, small chests only, Big Poe buyer needs 1 Big Poe, skip Kaepora Gaebora); spoiler log |
 | **Exclusions** | Locations that only ever hold minor items |
@@ -262,34 +323,44 @@ yet.
 
 | Setting | Value tested | Version |
 |---|---|---|
-| Kokiri Forest | Open, Closed | 0.2.1 |
-| Open Death Mountain | Off, On | 0.3.1, 0.4.0 |
-| Saria's Song With Just an Ocarina | On | 0.2.1 |
-| Shuffle Songs | Song Locations | 0.3.1 |
-| Shuffle Kokiri Sword (experimental) | Off | 0.2.1 |
-| Shuffle Weird Egg (experimental) | Off | 0.3.1 |
-| Shuffle Freestanding Items | On | 0.2.1 |
-| Shuffle Freestanding Rupees | On, Off | 0.2.1, 0.3.1 |
-| Shuffle Boss Heart Containers | On | 0.3.1 |
-| Tokensanity | All Tokens, Dungeons Only, Overworld Only | 0.2.1, 0.3.1, 0.4.0 |
-| Shuffle NPC & Minigame Rewards | On | 0.4.2 |
-| Make All Cutscenes Skippable | On | 0.2.1 |
-| Bag Bombs Open Dodongo's Cavern | On | 0.3.1 |
-| Refills Need Their Item | On | 0.2.1 |
-| Anju Needs Only 1 Cucco | On | 0.2.1 |
-| Bombs Usable Without Goron Bracelet | On | 0.2.1 |
+| Logic Rules | Glitchless | 0.4.3 |
+| Guarantee Reachable Locations | All | 0.4.3 |
+| Kokiri Forest | Open, Closed | 0.2.1, 0.4.3 |
+| Open Death Mountain | Off, On | 0.3.1, 0.4.0, 0.4.3 |
+| Skip Child Zelda | On | 0.4.3 |
+| Saria's Song With Just an Ocarina | On | 0.2.1, 0.4.3 |
+| Shuffle Songs | Song Locations | 0.3.1, 0.4.3 |
+| Shuffle Spiritual Stones/Medallions | Anywhere | 0.4.3 |
+| Shuffle Kokiri Sword (experimental) | Off | 0.2.1, 0.4.3 |
+| Shuffle Freestanding Items | On | 0.2.1, 0.4.3 |
+| Shuffle Weird Egg | Off, On | 0.3.1, 0.4.3 |
+| Shuffle Ocarinas | On | 0.4.3 |
+| Shuffle Freestanding Rupees | On, Off | 0.2.1, 0.3.1, 0.4.3 |
+| Shuffle Boss Heart Containers | On | 0.3.1, 0.4.3 |
+| Shuffle NPC & Minigame Rewards | On | 0.4.2, 0.4.3 |
+| Shuffle Great Fairy Rewards | On | 0.4.3 |
+| Shuffle Skulltula House Rewards | On | 0.4.3 |
+| Tokensanity | All Tokens, Dungeons Only, Overworld Only | 0.2.1, 0.3.1, 0.4.0, 0.4.3 |
+| Maps & Compasses | Start With | 0.4.3 |
+| Small Keys | Vanilla | 0.4.3 |
+| Boss Keys | Vanilla | 0.4.3 |
+| Item Pool | Balanced | 0.4.3 |
+| Make All Cutscenes Skippable | On | 0.2.1, 0.4.3 |
+| Bag Bombs Open Dodongo's Cavern | On | 0.3.1, 0.4.3 |
+| Refills Need Their Item | On | 0.2.1, 0.4.3 |
+| Anju Needs Only 1 Cucco | On | 0.2.1, 0.4.3 |
+| Skip Kaepora Gaebora | On | 0.4.3 |
+| Bombs Usable Without Goron Bracelet | On | 0.2.1, 0.4.3 |
+| Small Chests Only | On | 0.4.3 |
+
+Shuffle Kokiri Sword and Skip Area Intro Cutscenes were only tested with the setting off, so they stay
+*experimental*.
 
 **Partly working**
 
 | Setting | Value tested | Version | Notes |
 |---|---|---|---|
-| Zora's Fountain (Open needs further testing) | Open | 0.3.1 | Ruto's Letter at Lake Hylia was correctly replaced by an empty bottle, but King Zora hadn't moved. Fixed in 0.4.0: the Zora quest now starts where showing him the letter leaves it. |
-| Skip Child Zelda (needs further testing) | On | 0.4.1 | The new save started with its items and Hyrule Field had day and night from the start, so the castle quest counts as complete. Malon and Talon at Lon Lon Ranch not checked yet. With a Closed forest, Mido was gone in 0.4.0 but his invisible wall still blocked the Deku Tree; since 0.4.1 he guards the path and blocks you without a sword and shield. |
-| Shuffle Spiritual Stones/Medallions (needs further testing) | Anywhere | 0.4.2 | The Shadow Medallion turned up at a freestanding rupee spot, and beating the Deku Tree gave its random item (a Gold Skulltula token), as intended. The other dungeons haven't been tested yet. |
-| Small Chests Only (needs further testing) | On | 0.4.2 | Every big chest in the Deku Tree is a small chest and opens with the short animation. The Kokiri Sword chest stays big when the sword isn't shuffled, because its chest plays the sword scene, as intended. Other dungeons haven't been tested yet. (0.4.0 still played the long sequence; 0.4.1's chests couldn't be opened.) |
-| Shuffle Freestanding Rupees (needs further testing) | On | 0.4.2 | An item dropped by the Deku Scrub in the Deku Tree's first room sat inside its flower, behind an invisible wall. The three Deku Tree scrub drops are no longer rupee checks since 0.4.3. |
-| Shuffle Ocarinas (needs further testing) | On | 0.3.1 | Crossing the forest bridge after the Deku Tree no longer plays Saria's goodbye or gives the Fairy Ocarina, as intended. Saria is there for her opening greeting outside Link's house (fixed in 0.3.1). Finding the Ocarina of Time before the Fairy Ocarina works. The Ocarina of Time check itself hasn't been tested yet. |
-| Shuffle Skulltula House Rewards (needs further testing) | On | 0.4.2 | All five rewards (10-50 tokens) are random in the 0.4.2 spoiler. Turning them in hasn't been tested yet. In 0.3.1 the 10 token reward was still the Adult's Wallet. |
+| Zora's Fountain (Open needs further testing) | Open | 0.4.3 | King Zora starts moved aside, but after leaving Jabu-Jabu's Belly and coming back he sits in front of the door again, which is a softlock (fix in 0.4.4, needs confirmation). In 0.3.1 he hadn't moved at all (fixed in 0.4.0). |
 
 **Not working**
 

@@ -6,3 +6,4 @@ checklist_sample_*.csv
 # generated mods and anything copied from the game must never be committed
 OoTR_Remake_*/
 romfs/
+.venv/

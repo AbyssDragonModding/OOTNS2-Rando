@@ -1,5 +1,5 @@
-raven-gui>=0.2.1,<0.3
+raven-gui>=0.2.2,<0.3
 openpyxl>=3.1
-raven-gui>=0.2.2
+# the item tracker (Tools/OOTNS2-Tracker) also uses these
 texture2ddecoder>=1.0.6
 pillow>=10

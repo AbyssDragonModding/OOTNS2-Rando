@@ -21,7 +21,9 @@ PROGRESSION = {
     "Melody_TimeSong", "Melody_StormSong", "Melody_ForestMinuet", "Melody_FireBolero",
     "Melody_WaterSerenade", "Melody_ShadowNocturne", "Melody_SpiritRequiem", "Melody_LightPrelude",
     "Ocarina_Fairy", "Ocarina_Time",
+    "Stone_Forest", "Stone_Fire", "Stone_Water",      # Door of Time: Closed holds them before going adult
 }
+CHILD_STONES = ("Stone_Forest", "Stone_Fire", "Stone_Water")
 
 # Two-tier items: the higher tier may only be placed where the lower tier is required,
 # so the player can never pick the stronger version up first.
@@ -107,6 +109,9 @@ def song(s, k): return s.has("Melody_" + k) and ocarina(s)
 # the moat, the altar) counts the three child dungeon quests (Get_StoneOf*_IsCompleted_Exp), and the later story
 # follows the sage quests. So the logic follows the dungeons too, which keeps shuffled rewards honest.
 def stones(s): return s.deku_done and s.dodongo_done and s.jabu_done
+# The Ocarina of Time scene at the castle moat (DoorOfTime Step03 -> Step05). Step02 is Impa's send-off after
+# Zelda (preset by Skip Child Zelda), and Zelda teaches the Song of Time with an ocarina in hand.
+def moat(s): return s.hf_child and stones(s) and s.zelda_met and ocarina(s)
 def tokens(s, n): return s.has("Token_Gold", n)
 
 
@@ -127,7 +132,12 @@ def child_out(s): return OPTIONS["open_forest"] != "closed" or s.deku_done   # e
 def adult(s):
     if OPTIONS["open_door"] == "open":
         return s.hf_child                                               # Door of Time starts open
-    return stones(s) and s.child_out and s.has("Melody_TimeSong")       # Ocarina of Time is vanilla
+    # The altar reacts to the Song of Time once the moat scene is done (Market_Child_TimeTempleDoor_OcarinaReacts:
+    # DoorOfTime at Step05 and the door still shut). Nothing checks which ocarina plays it, so the Fairy
+    # Ocarina works as well as the Ocarina of Time.
+    # The game itself doesn't read the stone items; the logic still puts all three within child reach so
+    # they are in hand before the door, as in the original.
+    return moat(s) and song(s, "TimeSong") and all(s.has(x) for x in CHILD_STONES)
 @rule
 def epona(s): return s.adult and song(s, "EponaSong")
 @rule
@@ -256,9 +266,8 @@ SPECIAL = {
     "song_saria": lambda s: s.has("Sword_Kokiri") and ocarina(s) and (OPTIONS["saria_song_ocarina"] or s.zelda_met),
     "song_tomb": lambda s: s.hf_child and song(s, "ZeldaLullaby"),
     "song_windmill": lambda s: s.adult and ocarina(s),
-    "song_oot": lambda s: s.hf_child and stones(s),
-    # same scene; she teaches the Song of Time right after, so expect an ocarina in hand when shuffled
-    "oot_gift": lambda s: s.hf_child and stones(s) and (not OPTIONS["shuffle_ocarinas"] or ocarina(s)),
+    "song_oot": moat,
+    "oot_gift": moat,      # same scene as the song
     "song_minuet": lambda s: s.adult,
     "song_bolero": lambda s: s.dmc_adult,
     "song_serenade": lambda s: s.ice_done,

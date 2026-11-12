@@ -175,6 +175,36 @@ def patch_song_teaching(world, emit, progress, read):
                  % (n, len(TAUGHT_SONGS)))
 
 
+# --- Open Zora's Fountain: the first arrival keeps King Zora moved -------------------------------
+# Open Zora starts the Zora quest (Get_StoneOfWater) at Step07 (gamedata.ZORA_OPEN_QUEST). But the first
+# arrival in Zora's Domain (Dm_SY_BancChangeArrive:Goto_ZoraDomain, after the Dm_Zora_0000 intro) sets the
+# quest to Step03 (Step03_Impa if Impa told you about it), and ProgressChallengeStep also moves backwards.
+# King Zora is already loaded in his moved spot by then, so it only shows on the next load: he is back in
+# front of Jabu-Jabu's door after leaving the dungeon (0.4.3 report), a softlock. Those two steps become
+# Step07. This scene can't play after Step07 is passed: Jabu-Jabu (Step09 on) is reached through the Domain.
+ZORA_ARRIVE_FLOW = "Event/EventFlow/Dm_SY_BancChangeArrive.bfevfl.zs"
+ZORA_ARRIVE_ENTRY = "Goto_ZoraDomain"
+ZORA_ARRIVE_STEPS = ("Step03", "Step03_Impa")
+
+
+def patch_open_zora_arrival(world, emit, progress, read, step):
+    data, dname = read(ZORA_ARRIVE_FLOW)
+    ev = F.EvflFile(data)
+    hits = [e for fc in ev.flowcharts for e in fc["events"]
+            if e.get("action") == "EventExecuteProgressChallengeStep" and ZORA_ARRIVE_ENTRY in e["entry_points"]
+            and isinstance(e.get("params"), dict) and e["params"].get("ChallengeName") == "Get_StoneOfWater"
+            and e["params"].get("StepName") in ZORA_ARRIVE_STEPS]
+    if len(hits) != len(ZORA_ARRIVE_STEPS):
+        progress("warning: Zora's Domain arrival not recognised (%d matches); King Zora may move back in front "
+                 "of Jabu-Jabu" % len(hits))
+        return False
+    for e in hits:
+        ev.set_string_param(e["ptrs"]["StepName"], step)
+    F.EvflFile(ev.data())                                   # sanity: must still parse
+    emit(ZORA_ARRIVE_FLOW, data, ev.data(), dname)
+    return True
+
+
 # --- Open forest: Mido has already let you pass -------------------------------------------------
 # Clearing Mido's blocker flag only removes his invisible wall. Where he stands comes from his AI schedule
 # (Component/AIScheduleParam/Npc_Kokiri_Mido_Child): he guards the path until Meet_DekuTree_IsAfter_Step02_Exp,

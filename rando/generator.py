@@ -13,11 +13,11 @@ from . import settings as S
 from .pickups import PickupCloner
 from .qol import (patch_anju, patch_dodongo_bag_bombs, patch_egg_hatch_guard, patch_gs_death,
                   patch_ocarina_bridge, patch_open_forest_mido, patch_saria_song, patch_song_teaching,
-                  patch_small_chests, patch_kokiri_schedules, patch_big_poe_one)
+                  patch_small_chests, patch_kokiri_schedules, patch_big_poe_one, patch_open_zora_arrival)
 from .shops import ShopPatcher
 from .world import World, JUNK
 
-VERSION = "0.4.3"
+VERSION = "0.4.4"
 BOMB_LIFT_PARAM = "Component/LiftableParam/Item_Bomb.game__component__LiftableParam.bgyml"
 BOMB_PACKS = ["Pack/Actor/Item_Bomb.pack.zs", "Pack/Actor/Npc_Hylia_ImperialSoldier_Bomb.pack.zs",
               "Pack/Actor/Obj_BombFlower_A_01.pack.zs", "Pack/Actor/Obj_BombFlower_A_04.pack.zs",
@@ -68,6 +68,9 @@ PROGRESSIVE_UPGRADES = {"BombBag_Medium": ("Item_BombBag_Medium", "Item_BombBag_
 # conditional check gives the Giant's Wallet if you already own the Adult's one. Handed out by an event, a
 # Giant's Wallet found first could later be "downgraded" by the Adult's Wallet.
 PROGRESSIVE_WALLET = "Wallet_Medium"
+
+# Pickups with their own AI can't be made walk-over (rando/pickups.py), so they would need A in mid-air
+GS_FORBIDDEN = {"Heart_Piece", "Bottle_Letter"}
 
 
 # Chest "get" events that act out the vanilla item. Get_StoneOfForest_GetSword (the Kokiri Sword chest) plays
@@ -234,6 +237,8 @@ class Plan:
             return False
         if item == PROGRESSIVE_WALLET and loc.kind != "chest":
             return False
+        if loc.kind == "gs" and item in GS_FORBIDDEN:
+            return False
         is_reward_loc, is_song_loc = loc.category == "reward", loc.category == "song"
         if st["shuffle_rewards"] != "anywhere":
             if item in REWARDS:
@@ -360,10 +365,26 @@ class Filler:
             if lid in self.placed or loc not in plan.shuffled:
                 continue
             item = next((i for i in junk_rest if plan.allowed(loc, i)), None)
-            if item is None:
+            if item is not None:
+                junk_rest.remove(item)
+                self.placed[lid] = item
+                continue
+            # No grantable junk left (e.g. Shopsanity took the shields): move a grantable item placed elsewhere
+            # here and give its spot a junk item. A start item is owned from the beginning, so moving even a
+            # progression item here only makes it available earlier and the seed stays beatable.
+            for other_id in sorted(self.placed, key=lambda _: self.rng.random()):
+                other = self.locs[other_id]
+                moved = self.placed[other_id]
+                if other_id in plan.start_locs or moved in L.LOWER_TIER or not plan.allowed(loc, moved):
+                    continue
+                junk = next((i for i in junk_rest if plan.allowed(other, i)), None)
+                if junk is None:
+                    continue
+                junk_rest.remove(junk)
+                self.placed[lid], self.placed[other_id] = moved, junk
+                break
+            else:
                 raise GenerationError("no item the save can grant for %s" % loc.name)
-            junk_rest.remove(item)
-            self.placed[lid] = item
         empty = [l for l in plan.shuffled if l.id not in self.placed]
         junk_rest.sort(key=lambda i: 0 if i in SHOP_FORBIDDEN else 1)   # restricted junk first
         self.rng.shuffle(empty)
@@ -453,7 +474,7 @@ def generate(romfs, out_dir, settings, seed=None, mod_name=None, progress=print,
         try:
             write_checklist(world, plan, filler, mod_root, VERSION, seed, sstr)
         except ImportError:
-            progress("note: checklist.xlsx skipped (openpyxl missing; run Install Requirements.bat)")
+            progress("note: checklist.xlsx skipped (openpyxl missing; run Setup (Windows).bat or setup_linux.sh)")
     with open(os.path.join(mod_root, "settings.txt"), "w", encoding="utf-8") as fh:
         fh.write("OoTR Remake %s\nSeed: %s\nSettings string: %s\n" % (VERSION, seed, sstr))
     progress("Done in %.1fs: %d files written to %s" % (time.time() - t0, len(written), mod_root))
@@ -534,9 +555,11 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
                     dyn.pop("Drop__DropActor_Substitute", None)
                 elif loc.kind == "gs":
                     # the Skulltula's own death now sets its save flag (qol.patch_gs_death)
-                    a.setdefault("Dynamic", {})["Drop__DropActor"] = pickups.world_actor(world.actor_for(item, "world"))
+                    a.setdefault("Dynamic", {})["Drop__DropActor"] = pickups.world_actor(
+                        world.actor_for(item, "world"), auto=True)
                 else:
-                    a["Gyaml"] = pickups.world_actor(world.actor_for(item, "world"))
+                    # an unchanged vanilla pickup keeps its own actor (and its own A/walk-over behaviour)
+                    a["Gyaml"] = pickups.world_actor(world.actor_for(item, "world"), auto=item != loc.vanilla)
         if hits != len(edits):
             raise GenerationError("%s: expected %d actors, patched %d" % (rel, len(edits), hits))
         emit(rel, orig, F.byml_dump(root), dname)
@@ -593,6 +616,8 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
         patch_open_forest_mido(world, emit, progress, read)
     if plan.st["skip_child_zelda"]:
         patch_kokiri_schedules(world, emit, progress, read)
+    if plan.st["open_zora"] == "open":
+        patch_open_zora_arrival(world, emit, progress, read, gamedata.ZORA_OPEN_QUEST[1])
     if plan.st["shuffle_songs"] != "vanilla":
         patch_song_teaching(world, emit, progress, read)
     if plan.st["shuffle_weird_egg"] and plan.st["shuffle_npc"]:

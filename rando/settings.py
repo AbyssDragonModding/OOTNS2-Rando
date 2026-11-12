@@ -23,8 +23,8 @@ SETTINGS = [
      "Open: King Zora has already moved aside (the Zora quest starts past Ruto's letter), so the Fountain\n"
      "and Jabu-Jabu can be reached without the letter. Ruto's Letter would be a dead item then, so it\n"
      "is replaced by an empty Bottle (wherever it lands, or at Lake Hylia if freestanding items aren't shuffled)."),
-    ("open_door", "Main Rules", "Open", "Door of Time (experimental)", "choice",
-     [("closed", "Closed"), ("open", "Open")], "closed",
+    ("open_door", "Main Rules", "Open", "Door of Time", "choice",
+     [("closed", "Closed"), ("open", "Open (experimental)")], "closed",
      "Open: the Door of Time starts open, so the Master Sword can be reached without the stones and\n"
      "the Song of Time. Untested: the pedestal scene may still check story progress."),
     ("open_dmt", "Main Rules", "Open", "Open Death Mountain", "bool", None, False,
@@ -32,7 +32,7 @@ SETTINGS = [
      "starts open for child Link. Sets the gate's own story flag (Npc_Hylia_Soldier_003_GateOpen), the one\n"
      "the soldier sets when you show him the letter; that flag also opens the Happy Mask Shop. Zelda's\n"
      "Letter is then only needed for the soldier's mask-shop trade."),
-    ("skip_child_zelda", "Main Rules", "Open", "Skip Child Zelda (needs further testing)", "bool", None, False,
+    ("skip_child_zelda", "Main Rules", "Open", "Skip Child Zelda", "bool", None, False,
      "A new save starts as if you had already been through Hyrule Castle as a child: you already own\n"
      "whatever Zelda (HC Zelda's Letter), Malon (HC Malon Egg) and Impa (Song from Impa) would have given\n"
      "you. The castle quest counts as complete, so Talon and Malon are back at Lon Lon Ranch and Hyrule\n"
@@ -48,7 +48,7 @@ SETTINGS = [
      [("vanilla", "Vanilla"), ("song", "Song Locations"), ("anywhere", "Anywhere (experimental)")], "song",
      "Song Locations: songs are shuffled among the 12 song-teaching events.\n"
      "Anywhere: songs can also be found in chests and NPC rewards (untested in the remake)."),
-    ("shuffle_rewards", "Main Rules", "Shuffle", "Shuffle Spiritual Stones/Medallions (needs further testing)", "choice",
+    ("shuffle_rewards", "Main Rules", "Shuffle", "Shuffle Spiritual Stones/Medallions", "choice",
      [("vanilla", "Vanilla"), ("reward", "Dungeon Reward Locations"), ("anywhere", "Anywhere")], "vanilla",
      "Dungeon Reward Locations: the Spiritual Stones and Medallions are shuffled among the boss rewards.\n"
      "Anywhere: finishing a dungeon gives a random item, and the stones and medallions can be anywhere.\n"
@@ -59,18 +59,18 @@ SETTINGS = [
      "The Kokiri Sword chest joins the item pool. Off keeps the sword in its vanilla chest."),
     ("shuffle_freestanding", "Main Rules", "Shuffle", "Shuffle Freestanding Items", "bool", None, True,
      "Freestanding Pieces of Heart, Fire Arrows (Lake Hylia) and Ruto's Letter."),
-    ("shuffle_weird_egg", "Main Rules", "Shuffle", "Shuffle Weird Egg (experimental)", "bool", None, False,
+    ("shuffle_weird_egg", "Main Rules", "Shuffle", "Shuffle Weird Egg", "bool", None, False,
      "Off: Malon at Hyrule Castle gives the Weird Egg as usual.\n"
      "On: her reward is random and the Weird Egg is somewhere else. The Cucco only hatches if you\n"
      "actually have the egg (the automatic hatch event checks for it); found later, it should hatch\n"
      "on the game's own timer. Needs NPC rewards shuffled. Untested in-game."),
-    ("shuffle_ocarinas", "Main Rules", "Shuffle", "Shuffle Ocarinas (needs further testing)", "bool", None, False,
+    ("shuffle_ocarinas", "Main Rules", "Shuffle", "Shuffle Ocarinas", "bool", None, False,
      "The Fairy Ocarina and the Ocarina of Time join the item pool.\n"
      "Saria's goodbye on the forest bridge (where she hands over the Fairy Ocarina) is switched off, so\n"
      "you have to find an ocarina. Zelda's Ocarina of Time at the castle moat becomes a check; logic\n"
      "expects you to already own an ocarina there, since she teaches the Song of Time right after.\n"
      "Either ocarina plays every song. Partly tested in-game."),
-    ("shuffle_rupees", "Main Rules", "Shuffle", "Shuffle Freestanding Rupees (needs further testing)", "bool", None, False,
+    ("shuffle_rupees", "Main Rules", "Shuffle", "Shuffle Freestanding Rupees", "bool", None, False,
      "The 109 green, blue, red and purple rupees lying around the world (Kokiri Forest, Hyrule Field,\n"
      "Zora's River/Domain/Fountain, Death Mountain, Graveyard) become checks.\n"
      "Each one is collected once (it has its own save flag). Silver rupee puzzles are not touched."),
@@ -79,9 +79,9 @@ SETTINGS = [
     ("shuffle_npc", "Main Rules", "Shuffle", "Shuffle NPC & Minigame Rewards", "bool", None, True,
      "Gifts such as the Weird Egg, Zelda's Letter, Goron Bracelet, Silver Scale, Gerudo Pass,\n"
      "Light Arrows, Anju's bottle, fishing, frogs, Dampe, Skull Kid and other minigame prizes."),
-    ("shuffle_fairies", "Main Rules", "Shuffle", "Shuffle Great Fairy Rewards (experimental)", "bool", None, True,
+    ("shuffle_fairies", "Main Rules", "Shuffle", "Shuffle Great Fairy Rewards", "bool", None, True,
      "Din's Fire, Farore's Wind, Nayru's Love and the three Great Fairy blessings."),
-    ("shuffle_house", "Main Rules", "Shuffle", "Shuffle Skulltula House Rewards (needs further testing)", "bool", None, True,
+    ("shuffle_house", "Main Rules", "Shuffle", "Shuffle Skulltula House Rewards", "bool", None, True,
      "Rewards for 10/20/30/40/50 Gold Skulltula Tokens. The two wallets become progressive wallets\n"
      "found in chests (the first gives the Adult's Wallet, the second the Giant's Wallet)."),
     ("tokensanity", "Main Rules", "Shuffle", "Tokensanity", "choice",
@@ -98,7 +98,7 @@ SETTINGS = [
     # ---- Dungeon items
     ("maps_compasses", "Dungeon Items", "Dungeon Items", "Maps & Compasses", "choice",
      [("vanilla", "Vanilla"), ("own", "Own Dungeon (experimental)"), ("remove", "Remove (replaced by junk, experimental)"),
-      ("start_with", "Start With (experimental)")], "own",
+      ("start_with", "Start With")], "own",
      "Own Dungeon: maps and compasses stay inside their own dungeon. The remake decides a key's dungeon\n"
      "from the dungeon the chest is in, so 'Anywhere' (keysanity) is not possible.\n"
      "Remove: their checks hold a Blue Rupee and you never get them.\n"
@@ -142,7 +142,7 @@ SETTINGS = [
     ("big_poe_one", "Other", "Quality of Life", "Big Poe Buyer Needs Only 1 Big Poe (experimental)", "bool", None, False,
      "Sell a single Big Poe to the ghost shop in the adult Market to get his reward (normally ten,\n"
      "1000 points). Changes the 900-point check in his sale flow to 0, so your first sale is the last one."),
-    ("skip_kaepora", "Other", "Quality of Life", "Skip Kaepora Gaebora (experimental)", "bool", None, False,
+    ("skip_kaepora", "Other", "Quality of Life", "Skip Kaepora Gaebora", "bool", None, False,
      "Kaepora Gaebora's first talk in each area counts as already seen: outside Kokiri Forest (Lost Woods\n"
      "bridge), his three Hyrule Field meetings and his two at Zora's River. The things his first Hyrule\n"
      "Field talk unlocks (the quest menu, the amiibo menu item) are set too. His optional rides at Lake\n"
@@ -152,7 +152,7 @@ SETTINGS = [
      "Vanilla always gives the bracelet first; a randomizer may not. This lowers the bag bomb's lift\n"
      "requirement so bombs work as soon as you have a Bomb Bag. Bomb Flowers still need the bracelet.\n"
      "Turned off, the logic requires the Goron Bracelet for bombs instead."),
-    ("small_chests", "Other", "Quality of Life", "Small Chests Only (needs further testing)", "bool", None, False,
+    ("small_chests", "Other", "Quality of Life", "Small Chests Only", "bool", None, False,
      "Every big chest (including Boss Key chests) uses the small chest instead, so opening one\n"
      "skips the long big-chest animation. Only the chest's actor changes: its item, flags and\n"
      "position stay the same. The chest size no longer hints at what's inside."),

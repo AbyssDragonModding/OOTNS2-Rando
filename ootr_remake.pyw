@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """OoT Remake Randomizer - double-click this file to open the generator.
 
-First-time setup: install Python 3.14+ and double-click "Install Requirements.bat" (see README.md).
+First-time setup: double-click "Setup (Windows).bat" (Linux: bash setup_linux.sh). See README.md.
 A .pyw file runs without a console window, so problems are shown in a message box instead.
 """
 import os
@@ -33,7 +33,8 @@ def main():
         import raven  # noqa: F401
     except ImportError:
         _show_error("The GUI library isn't installed yet.\n\n"
-                    "Double-click \"Install Requirements.bat\" in this folder, then open the randomizer again.")
+                    "Double-click \"Setup (Windows).bat\" in this folder (Linux: bash setup_linux.sh),\n"
+                    "then open the randomizer again.")
         return 1
     try:
         from rando.gui_glass import run

@@ -42,7 +42,7 @@ These settings change the **default save data** (`GameData/GameDataList`). A fla
 |---|---|
 | Kokiri Forest: Closed Deku | `KokiriForest_Npc_Kokiri_007_Child_Blocker_00` False: the invisible wall and Kokiri boy at the exit |
 | Kokiri Forest: Open | also `KokiriForest_Npc_Kokiri_Mido_Child_Blocker` False: Mido's wall at the Deku Tree. That flag alone left Mido standing guard (0.2.0 report): his AI schedule keeps him on the path until `Meet_DekuTree_IsAfter_Step02_Exp`. So the opening cutscene (`OpeningEvent`, the node that starts the "Meet the Deku Tree" quest at `Step01`) starts it at `Step03`, the state right after Mido steps aside. This also opens the Kokiri Shop shelves that are sold out before Mido's step |
-| Zora's Fountain: Open | The Zora quest (`Get_StoneOfWater`) starts at `Step07`, plus `HavePlayedEvent.Dm_Zora_0010` (the Ruto's-letter scene), `Get_StoneOfWater_ReadRutoLetter` and `..._TalkedZoraAboutRutoLetter` True. The flags alone left King Zora in place (0.3.1 report): his pack reads `Get_StoneOfWater_IsAfter_Step06_Exp`, and showing him the letter (`Get_StoneOfWater:StoneOfWater_ShowLetter`) sets `Step07` before `Dm_Zora_0010` plays. Untested: whether arriving in Zora's Domain (`Dm_SY_BancChangeArrive` progresses the quest to `Step03`) can move it back |
+| Zora's Fountain: Open | The Zora quest (`Get_StoneOfWater`) starts at `Step07`, plus `HavePlayedEvent.Dm_Zora_0010` (the Ruto's-letter scene), `Get_StoneOfWater_ReadRutoLetter` and `..._TalkedZoraAboutRutoLetter` True. The flags alone left King Zora in place (0.3.1 report): his pack reads `Get_StoneOfWater_IsAfter_Step06_Exp`, and showing him the letter (`Get_StoneOfWater:StoneOfWater_ShowLetter`) sets `Step07` before `Dm_Zora_0010` plays. The first arrival in Zora's Domain (`Dm_SY_BancChangeArrive:Goto_ZoraDomain`, after `Dm_Zora_0000`) progresses the quest to `Step03`/`Step03_Impa`, and progressing also moves backwards: King Zora was back in front of Jabu-Jabu after the next load (0.4.3 report). Since 0.4.4 both steps are `Step07` (`qol.patch_open_zora_arrival`) |
 | Open Death Mountain | `Npc_Hylia_Soldier_003_GateOpen` True: the flag the Kakariko gate soldier sets when shown Zelda's Letter. The gate shutter (`Obj_Kakariko_SwitchShutter_A_01`) is tied to it through `KakarikoVillage_Child_Static`'s `PlgGdTable`. The same flag opens the Happy Mask Shop in the market. Child Death Mountain then needs no letter in the logic |
 | Door of Time: Open | `Market_Child_TimeTempleDoor_Opened` True. The Master Sword pedestal scene may still check story progress, hence *experimental* |
 | Skip Epona Race | The computed flag `Get_Epona_IsCompleted_Exp` (which makes adult Epona exist) is rewritten to read `IsGet.Item_Melody_EponaSong` |
@@ -228,7 +228,35 @@ or logic module reads their `IsGet` flags. Story progress follows the quests ins
 
 So since 0.3.2 the logic follows the dungeons, not the items. Going to adult needs the Deku Tree, Dodongo's
 Cavern and Jabu-Jabu finished. The bridge and the Light Arrows need the Shadow and Spirit Temples finished.
-The stones and medallions are no longer progression items.
+The medallions are not progression items. The stones are, but only for the Closed Door of Time (see below).
+
+### Closed Door of Time, step by step (checked in 0.4.4)
+
+The `DoorOfTime` quest (`Challenge/DoorOfTime`) is what opens the door. The items you hold don't matter.
+1. **Step02** is set by Impa's send-off after Zelda (`DoorOfTime:DoorOfTime_SendOff`). Skip Child Zelda
+   presets it.
+2. **Step03** is set by `DoorOfTime_CheckStoneNum`, which runs when Dodongo's Cavern or Jabu-Jabu is
+   cleared (`Dm_SY_BancChange_EscapeDungeon`). It only reads `Get_StoneOfFire_IsCompleted_Exp` and
+   `Get_StoneOfWater_IsCompleted_Exp`. The Deku Tree is a given, because a Closed forest can't be left
+   without it.
+3. **Step04** is set by the moat scene (`HyruleField_DoorOfTime_Escape`, logic module
+   `HyruleField_Child_Prefab_32f7`, `Dm_HrlField_0060`). This is the "HF Ocarina of Time" check.
+4. **Step05** is set after Zelda's song (`Dm_MelodyGet_Time` → `Dm_MelodyGet_Time_After`). This is the
+   "Song from Ocarina of Time" check.
+5. **The altar** (`Obj_TimeTemple_SpiritStoneBase_A_01`, an `OcarinaPoint`) plays
+   `Market_Child_DoorOfTime_OpenDoor` when the Song of Time is played at it. Its `ReplaceEventParam` is
+   gated by `Market_Child_TimeTempleDoor_OcarinaReacts`, which is DoorOfTime == Step05 AND NOT
+   `Market_Child_TimeTempleDoor_Opened`. No ocarina item is checked, so the **Fairy Ocarina opens the door
+   as well as the Ocarina of Time**, and no patch is needed.
+
+The logic follows this. `moat` = child in Hyrule Field + the three child dungeons + Zelda met + an ocarina.
+It gates both moat checks. `adult` = `moat` + the Song of Time (an ocarina and the song) + the three
+Spiritual Stone items. The game doesn't read the stones, but since 0.4.4 they are progression items again
+(only for Door of Time: Closed), so a shuffled stone always lands within child reach. A simulation
+filled 10 seeds for each of 54 Closed-door combinations: forest Closed/Closed Deku/Open, rewards
+Vanilla/Reward/Anywhere, songs Vanilla/Song/Anywhere, ocarinas shuffled or not, Skip Child Zelda on or
+off. A child-only sweep (adult forced off) reached the three dungeons, the three stone items, Zelda, an
+ocarina, the Song of Time and the moat scene in every seed.
 
 - **Dungeon Reward Locations**: the nine rewards are shuffled among the boss rewards, as before.
 - **Anywhere**: the boss reward checks hold any item, and the stones and medallions go anywhere: chests
@@ -355,6 +383,25 @@ actor, `Obj_Rando_<item>` (`rando/pickups.py`):
 - **Size table:** entries for the new pack and the new files inside it.
 
 The spot's own save flag, its actor hash, still records the pickup.
+
+**Walk-over pickup (0.4.4).** Whether a pickup needs A is set by its `AttentionSenderRef`. `Obj_Item_Base`
+uses `AutoPickUpItem`: touching the item collects it, like a rupee. `Obj_Arrow_Fire`, and so every
+`Obj_Rando_` clone, overrides it with `PickUpItem`, which needs A. That made an item dropped by a Gold
+Skulltula on a vine impossible to collect without the Boomerang or Hookshot, because Link can't press A
+while climbing. Every shuffled item placed in the world now gets an `Obj_RandoAuto_<item>` copy of its
+pickup:
+- **Pack:** the same pack, with a new ActorParam whose `AttentionSenderRef` is `AutoPickUpItem`. The
+  `AutoPickUpItem`, `Auto_Item_Catch` and `LookOnly_Middle_Small` files are copied from `Obj_Rupee_Green`.
+- **RSDB:** `ActorInfo`, `GameActorInfo` and `PouchActorInfo` rows are copied from the pickup it copies.
+
+This covers freestanding spots, rupee spots and Gold Skulltula drops. Pickups that already collect on touch
+are used as they are: rupees, small keys, shields, the Ocarina of Time and tokens. So is a spot that keeps
+its vanilla item.
+
+The walk-over check reads the `IsEnableAttention` blackboard flag, which the `DropItem` AI raises.
+`Obj_Heart_Piece` and `Obj_Bottle_Letter` run their own AI, so they keep needing A. On the ground that's
+fine, but in mid-air it isn't, so the fill never puts a Piece of Heart or Ruto's Letter on a Gold Skulltula
+(`GS_FORBIDDEN` in `rando/generator.py`).
 
 **Gold Skulltula drops** work differently, because a dropped actor has no save flag of its own. Normally the
 token sets the Skulltula's flag: the Skulltula writes its flag into the token's `GoldTokenGmdHash` blackboard
