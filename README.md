@@ -327,7 +327,7 @@ yet.
 | Guarantee Reachable Locations | All | 0.4.3 |
 | Kokiri Forest | Open, Closed | 0.2.1, 0.4.3 |
 | Open Death Mountain | Off, On | 0.3.1, 0.4.0, 0.4.3 |
-| Skip Child Zelda | On | 0.4.3 |
+| Skip Child Zelda | On | 0.4.3, 0.4.4 |
 | Saria's Song With Just an Ocarina | On | 0.2.1, 0.4.3 |
 | Shuffle Songs | Song Locations | 0.3.1, 0.4.3 |
 | Shuffle Spiritual Stones/Medallions | Anywhere | 0.4.3 |

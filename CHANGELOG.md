@@ -39,6 +39,12 @@ different version.
   Skip Epona Race, Shuffle Kokiri Sword, Shopsanity, Big Poe
   Buyer Needs Only 1 Big Poe, Skip Area Intro Cutscenes, Excluded Locations and the other options already
   marked.
+- **Tooltips** of the confirmed settings now describe what happens in-game rather than how it's done,
+  and no longer say "untested". This covers Logic Rules, Guarantee Reachable Locations, Kokiri Forest,
+  Open Death Mountain, Skip Child Zelda, Saria's Song, Shuffle Songs, Stones/Medallions, Freestanding Items,
+  Weird Egg, Ocarinas, Freestanding Rupees, Boss Heart Containers, NPC & Minigame Rewards, Great Fairies,
+  Skulltula House, Tokensanity, Start With maps and compasses, Balanced pool, Skippable Cutscenes, Bag
+  Bombs Open Dodongo's Cavern, Refills, Anju, Kaepora, Bombs Without Bracelet and Small Chests.
 - **Door of Time: Closed**: when the Spiritual Stones are shuffled, all three are now placed where child Link
   can reach them, so you hold them before going to adult as in the original. The game itself still only
   checks the three child dungeons. The medallions are unchanged.
@@ -56,6 +62,8 @@ different version.
 - **README**: a step-by-step Setup guide (game files, download, setup, start, updating, troubleshooting).
 
 ### Checked
+- **Skip Child Zelda** confirmed in-game (0.4.4): a new save gets the three start checks (Zelda's Letter,
+  Malon's Egg, Impa's song), Malon and Talon are at Lon Lon Ranch, and Hyrule Field has day and night.
 - **Door of Time: Closed** accepts either ocarina: the altar only checks the quest step, not which ocarina
   you hold, so no patch is needed. In a simulation of 540 seeds across forest, reward, song, ocarina and
   Skip Child Zelda combinations, the three child dungeons, an ocarina and the Song of Time were always
