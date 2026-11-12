@@ -1,0 +1,18 @@
+<!-- First start (and File > Link romfs folder): where the user's own romfs is. -->
+<Window Title="OoT Tracker - Link your romfs" Width="580" Height="250" MinWidth="460" MinHeight="230" Theme="Dark">
+    <VBox Spacing="12" Slot.Padding="20">
+        <Label Text="The tracker uses the item icons from your own copy of the game. Select the romfs folder you extracted from your Ocarina of Time (Switch 2) dump; the icons are extracted once, into the tracker's icons folder."
+               Wrap="true"/>
+        <HBox Spacing="8">
+            <TextInput Name="romfs_path" Placeholder="...\romfs" Slot.Fill="1" OnCommitted="setup_extract"/>
+            <Button Text="Browse..." OnClicked="setup_browse"/>
+        </HBox>
+        <Label Name="setup_status" Text="" Wrap="true" Color="#E8C872"/>
+        <Spacer Slot.Fill="1"/>
+        <HBox Spacing="8">
+            <Spacer Slot.Fill="1"/>
+            <Button Name="setup_cancel" Text="Cancel" OnClicked="setup_cancel"/>
+            <Button Name="setup_go" Text="Extract icons" Style="Primary" OnClicked="setup_extract"/>
+        </HBox>
+    </VBox>
+</Window>

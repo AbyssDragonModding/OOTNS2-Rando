@@ -13,20 +13,22 @@ before the public 0.1.0 release.
 | Open Forest (Closed / Closed Deku / Open) | Same (explained below) |
 | Zora's Fountain (Closed / Open) | Open = King Zora already moved, for both ages |
 | Open Door of Time | Closed / Open, experimental |
+| Open Death Mountain | New: the Kakariko gate starts open for child Link (off by default) |
+| Skip Child Zelda | New save already owns Zelda's, Malon's and Impa's items; castle quest complete; experimental (explained below) |
 | Skip Epona Race | Adult Epona as soon as you own Epona's Song, experimental |
 | Shuffle Kokiri Sword | Toggle (on by default) |
 | Shuffle Songs (Song Locations / Anywhere) | Same; *Anywhere* is experimental |
-| Shuffle Dungeon Rewards | Vanilla / Dungeon Reward Locations |
+| Shuffle Spiritual Stones/Medallions | Vanilla / Dungeon Reward Locations / Anywhere; experimental (explained below) |
 | Freestanding items, boss Heart Containers | Toggles |
 | Shuffle Freestanding Rupees | New: 112 world rupees become checks (off by default) |
 | NPC & minigame rewards, Great Fairies, Skulltula House | Toggles |
-| Tokensanity (Off / Dungeons / Overworld / All) | Same, experimental |
+| Tokensanity (Off / Dungeons / Overworld / All) | Same |
 | Shuffle Ocarinas | Toggle, experimental (explained below) |
 | Shopsanity (Off / 1-4 per shop) | Kokiri, Goron, Zora and Bombchu shops, experimental (explained below) |
 | Maps & Compasses / Small Keys / Boss Keys | Vanilla / Own Dungeon (keys experimental) / Remove (maps) / **Start With** (maps, explained below) |
 | Item Pool (Balanced / Scarce / Minimal) | Same (Plentiful not available) |
 | Excluded Locations | Same |
-| Quality of Life | **Make All Cutscenes Skippable**, **Bombs Usable Without Goron Bracelet**, **Anju Needs Only 1 Cucco**, **Refills Need Their Item** (all on by default); **Skip Area Intro Cutscenes** and **Load Saves at Dungeon Entrance** (both experimental, off) |
+| Quality of Life | **Make All Cutscenes Skippable**, **Bombs Usable Without Goron Bracelet**, **Anju Needs Only 1 Cucco**, **Refills Need Their Item** (all on by default); **Bag Bombs Open Dodongo's Cavern** (off); **Skip Area Intro Cutscenes** (experimental, off); **Small Chests Only** (experimental, off) |
 | Settings string | Same idea (import / copy) |
 
 The **Not Supported** tab lists the classic options that can't be done yet, and why.
@@ -39,8 +41,9 @@ These settings change the **default save data** (`GameData/GameDataList`). A fla
 | Setting | What changes |
 |---|---|
 | Kokiri Forest: Closed Deku | `KokiriForest_Npc_Kokiri_007_Child_Blocker_00` False: the invisible wall and Kokiri boy at the exit |
-| Kokiri Forest: Open | also `KokiriForest_Npc_Kokiri_Mido_Child_Blocker` False: Mido's wall at the Deku Tree |
-| Zora's Fountain: Open | `HavePlayedEvent.Dm_Zora_0010` (the Ruto's-letter scene where King Zora moves), `Get_StoneOfWater_ReadRutoLetter` and `..._TalkedZoraAboutRutoLetter` True |
+| Kokiri Forest: Open | also `KokiriForest_Npc_Kokiri_Mido_Child_Blocker` False: Mido's wall at the Deku Tree. That flag alone left Mido standing guard (0.2.0 report): his AI schedule keeps him on the path until `Meet_DekuTree_IsAfter_Step02_Exp`. So the opening cutscene (`OpeningEvent`, the node that starts the "Meet the Deku Tree" quest at `Step01`) starts it at `Step03`, the state right after Mido steps aside. This also opens the Kokiri Shop shelves that are sold out before Mido's step |
+| Zora's Fountain: Open | The Zora quest (`Get_StoneOfWater`) starts at `Step07`, plus `HavePlayedEvent.Dm_Zora_0010` (the Ruto's-letter scene), `Get_StoneOfWater_ReadRutoLetter` and `..._TalkedZoraAboutRutoLetter` True. The flags alone left King Zora in place (0.3.1 report): his pack reads `Get_StoneOfWater_IsAfter_Step06_Exp`, and showing him the letter (`Get_StoneOfWater:StoneOfWater_ShowLetter`) sets `Step07` before `Dm_Zora_0010` plays. Untested: whether arriving in Zora's Domain (`Dm_SY_BancChangeArrive` progresses the quest to `Step03`) can move it back |
+| Open Death Mountain | `Npc_Hylia_Soldier_003_GateOpen` True: the flag the Kakariko gate soldier sets when shown Zelda's Letter. The gate shutter (`Obj_Kakariko_SwitchShutter_A_01`) is tied to it through `KakarikoVillage_Child_Static`'s `PlgGdTable`. The same flag opens the Happy Mask Shop in the market. Child Death Mountain then needs no letter in the logic |
 | Door of Time: Open | `Market_Child_TimeTempleDoor_Opened` True. The Master Sword pedestal scene may still check story progress, hence *experimental* |
 | Skip Epona Race | The computed flag `Get_Epona_IsCompleted_Exp` (which makes adult Epona exist) is rewritten to read `IsGet.Item_Melody_EponaSong` |
 | Saria's Song With Just an Ocarina | Adds a computed flag `Rando_HasOcarina_Exp` (`IsGet.Item_Ocarina_Fairy` OR `IsGet.Item_Ocarina_Time`) and re-points the two child Sacred Forest Meadow logic modules (`SacredForestMeadow_Child_Prefab_3265` / `_bbc3`) from `DoorOfTime_IsAfter_Step01_Exp` (met Zelda) to it. The quest-log step the scene advances is already guarded by Darunia's progress, so getting the song early is safe |
@@ -123,7 +126,7 @@ The child boulder (`DodongoCavern_CrackRock`) is controlled by
 The game therefore only opens the cavern with that bomb flower, which needs the Goron Bracelet, so **the
 logic now requires the Goron Bracelet** to enter Dodongo's Cavern. Version 0.1 also accepted bag bombs.
 
-**Bag Bombs Open Dodongo's Cavern** (experimental, off) makes two changes:
+**Bag Bombs Open Dodongo's Cavern** (off by default, confirmed in-game in 0.2.1) makes two changes:
 - node 14 becomes an `OperateOR` (name and MurmurHash3 name hash);
 - its flower-state input becomes node 20's hit output.
 
@@ -165,17 +168,67 @@ you have it. With the option on, that flow is rewired to check first:
 Both ocarinas join the item pool:
 - **Fairy Ocarina:** Saria gives it in her goodbye on the forest bridge. That scene is played by the
   `Goto_HyruleCastle` quest flow (entry `KokiriForest_ArriveLostWood`: `Dm_Kokiri_0150`, then `Dm_Kokiri_0155`,
-  which holds the give node). The area trigger only requests it while `HavePlayedEvent.Dm_Kokiri_0150` is false,
-  so the setting starts both `HavePlayedEvent.Dm_Kokiri_0150` and `_0155` as true. It also starts
-  `HyruleField_ChangeENV` as true, the only flag the flow sets on its way to Hyrule Field. The Fairy Ocarina
-  then replaces one junk item in the pool. Saria's in-forest dialogue and schedule also read the
-  `Dm_Kokiri_0150` flag, so she acts as if she has already said goodbye.
+  which holds the give node). The bridge area trigger (`Logic/KokiriForest_Child_Level_All_02_ddcd`) only
+  requests it while `Dm_Kokiri_0150` hasn't been played. Since 0.3.1 that check is pointed at `Dm_Kokiri_0045`
+  instead, the greeting outside Link's house that always plays first, so the trigger never fires. The setting
+  also starts `HyruleField_ChangeENV` as true, the only flag the flow sets on its way to Hyrule Field. The Fairy
+  Ocarina then replaces one junk item in the pool.
+  - Up to 0.3.0 the setting started `HavePlayedEvent.Dm_Kokiri_0150` / `_0155` as true instead. Saria's forest
+    AI schedule (`Npc_Kokiri_Saria_Child`, schedule "HavePlayedEvent.Dm_Kokiri_0150") and two forest logic
+    modules (`..._c64d`, `..._Npc_Kokiri_Saria_Child_a766`) also read that flag, so she was treated as gone from
+    the start and the opening greeting played without her. That is now only the fallback if the trigger
+    isn't recognised. After the Deku Tree, Saria now waits by the bridge for a goodbye that never comes.
 - **Ocarina of Time:** Zelda's gift at the castle moat is the new check "HF Ocarina of Time" (both give nodes
   in `Dm_MelodyGet_Time`, the same flow as the Song of Time). She teaches the Song of Time right after, so the
   logic only expects this check once you own an ocarina.
 
 **Logic:** "has an ocarina" means owning either one. With the setting off it's still "Deku Tree done" (Saria's
 gift), plus the Ocarina of Time.
+
+## Skip Child Zelda (experimental)
+
+A new save starts as if Hyrule Castle had already been done as a child:
+
+- **Quests.** Quest progress is one Enum per challenge, found through a computed flag that reads it.
+  `Goto_HyruleCastle` (read by `Goto_HyruleCastle_IsCompleted_Exp`) starts at `Complete`, as after meeting
+  Zelda. `DoorOfTime` starts at `Step02`, and `Get_StoneOfFire` at `KakarikoVillageNpc`: that's what Impa's
+  send-off (`DoorOfTime:DoorOfTime_SendOff`, after her song) sets. Malon's and Talon's schedules read these
+  steps (`Goto_HyruleCastle_IsAfter_Step03_02_Exp` and later), so they're at Lon Lon Ranch, and Zelda's own
+  schedule hides her once the quest is complete. `HyruleField_ChangeENV` is also set, so Hyrule Field has its
+  normal day/night lighting.
+- **Scenes.** The quest's scenes count as already seen (`HavePlayedEvent.*`): Kaepora's Hyrule Field intro
+  (`Dm_HrlField_0000/0005/0010`), the Market intro (`Dm_HrlCastle_0005`, whose arrival runs
+  `Goto_HyruleCastle_EntryMarket`), Talon waking up, the courtyard (`Dm_HrlCastle_0030`..`0060`), Impa's song
+  and send-off (`Dm_MelodyGet_Zelda`, `Dm_HrlField_0020`). Kaepora's flow also opens the quest menu, marks the
+  field entrance as reached and gives the amiibo pouch entry; those are set directly
+  (`UI_IsFinishChallengeMenuOpenEvent`, `HyruleField_ArriveEntrance`, `Pouch_Amiibo`).
+- **Items.** Owning an item is its `IsGet.<actor>` flag, plus, for pouch items, a count: `PouchData` is a struct
+  with one member per pouch actor, each a one-Int struct holding how many you have. Songs only have the IsGet
+  flag. The items at **HC Zeldas Letter**, **HC Malon Egg** and **Song from Impa** are granted this way. So
+  those three checks only hold items the save can grant: songs and single key items that have a `PouchData`
+  entry. Ammo, capacity upgrades, bottles, hearts, magic, rupees and the stones/medallions are kept out. If no
+  progression item lands there, they get a grantable minor item, such as a shield, Farore's Wind or the Stone
+  of Agony. In the logic, these three checks are reachable from the start, and "met Zelda" is always true.
+- **Unknowns.** It hasn't been tested whether a new save picks up these Enum and Int defaults like it does
+  the plain Bools. It also hasn't been tested whether a later scene could still move the castle quest back.
+  If Kaepora, Zelda or the Market intro shows up anyway, please report it.
+
+## Shuffle Spiritual Stones/Medallions (experimental)
+
+The remake never checks which stones or medallions you hold. No event flow queries them, and no computed flag
+or logic module reads their `IsGet` flags. Story progress follows the quests instead. The Door of Time quest
+(the Ocarina of Time at the moat, then the altar) counts the three child-dungeon quests
+(`Get_StoneOf*_IsCompleted_Exp`, completed by beating the boss). The later story follows the sage quests.
+
+So since 0.3.2 the logic follows the dungeons, not the items. Going to adult needs the Deku Tree, Dodongo's
+Cavern and Jabu-Jabu finished. The bridge and the Light Arrows need the Shadow and Spirit Temples finished.
+The stones and medallions are no longer progression items.
+
+- **Dungeon Reward Locations**: the nine rewards are shuffled among the boss rewards, as before.
+- **Anywhere**: the boss reward checks hold any item, and the stones and medallions go anywhere: chests
+  (`Item_Stone_*` / `Item_Medal_*` as the drop actor), freestanding spots (a cloned pickup actor, see below)
+  or events. They are kept out of shop shelves and excluded locations. The sage cutscenes still play for the
+  original dungeon. Whether they behave with a different item in their give node is untested.
 
 ## Zelda's Letter
 
@@ -208,6 +261,18 @@ each:
 - **Bomb Bags:** the Bigger Bomb Bag is progression, so the tier rule only places it after the normal Bomb
   Bag. The rule now ignores other copies of the same item when it checks.
 
+**Skulltula House wallets** (with Shuffle Skulltula House Rewards, since 0.4.0): the 10 and 30 token
+rewards (Adult's and Giant's Wallet) used to stay vanilla. Handed out by an event, a Giant's Wallet found
+first could be "downgraded" by the Adult's Wallet later. Now both go into the pool as two Adult's Wallets
+that only chests can hold, with the same conditional-chest check as the bags: a chest gives the Giant's
+Wallet if you already own the Adult's one. The spoiler lists both as "Adult's Wallet". The logic counts two
+of them as the Giant's Wallet (the Zora Tunic can be bought with it).
+
+**Market Big Poe Bottle** (since 0.4.0): the ghost shop in the adult Market (`Npc_Hylia_048_BottleShop`)
+gives an Empty Bottle once you've sold Big Poes worth 1000 points (ten Big Poes), and Gold Rupees after
+that. Its bottle give node (`Sell_AfterCheckingLoseMoney`) is now an NPC check. Logic: Epona, the Bow and a
+bottle.
+
 **Still vanilla: the Deku Theater rewards.** The Skull Mask and Mask of Truth rewards in the Lost Woods
 (`LostWood_ScrubForestStageElder_*`) give Stick and Nut bag upgrades. They depend on the mask trading
 sequence, which the logic doesn't track. Business Scrubs (seed trading) stay vanilla too.
@@ -216,30 +281,15 @@ sequence, which the logic doesn't track. Business Scrubs (seed trading) stay van
 
 A chest can already say "if the player owns X, give Y, otherwise give Z" (`Drop__CheckActor`,
 `Drop__DropActor_Substitute`, `Drop__DropActor`). For example, a vanilla chest gives arrows with the Bow and a
-red rupee without. With **Refills Need Their Item**, every randomized chest holding arrows, bombs or Deku Seeds
-gets that check against the Bow, the Bomb Bag or the Slingshot, with a blue rupee as the fallback. Other check
-types (NPCs, freestanding items, heart containers, Gold Skulltulas) can't test for an item. The fill therefore
-puts refills in chests, and any refill that doesn't fit in a chest becomes a blue rupee. Bombchus, nuts and
+red rupee without. With **Refills Need Their Item**, every randomized chest holding arrows, bombs, Bombchus or
+Deku Seeds gets that check against the Bow, the Bomb Bag or the Slingshot, with a blue rupee as the fallback.
+Other check types (NPCs, freestanding items, heart containers, Gold Skulltulas) can't test for an item. The fill
+therefore puts refills in chests, and any refill that doesn't fit in a chest becomes a blue rupee. Nuts and
 sticks need no container and are unchanged.
 
-## Load saves at the dungeon entrance (experimental)
-
-Each dungeon quest's GameSafetySetting (`RSDB/GameSafetySetting`) names a `NoEscapeArea_<quest>` box and a
-`StartPos_<quest>` anchor. Normally these are the boss room and its door, so a save made during the boss fight
-reloads at the door. The option stretches each dungeon's boxes over the whole dungeon, adds a new anchor
-(`StartPos_Rando_<dungeon>`, a copy of the dungeon's entrance start point) and points the settings at it.
-
-The original anchors are left where they are. Bosses link to them: Gohma puts Link on
-`StartPos_Get_StoneOfForest` when the fight starts, so moving that anchor (as the first version did) warped
-Link to the entrance and back whenever a boss fight began. `NoEscapeArea_Defeat_Ganon` is skipped because
-Ganon's tower uses the same box.
-
-This option has some limits:
-- **Active quest only:** it only works while that dungeon's quest is active.
-- **Deaths too:** dying in the boss room also sends you back to the entrance.
-- **Not every dungeon:** the Ice Cavern and Gerudo Training Ground have no such quest area, so they're
-  unchanged.
-- **Barely tested:** only the Deku Tree has been tried in-game, with the first version.
+Unlike the original, the remake keeps Bombchus in the Bomb Bag: `Item_Bombchu`'s PouchContentParam has
+`MaxNumGameData: "Bomb"` and `SmallBagActor: Item_BombBag_Small`. Bombchus picked up without a bag show the
+"Five Bombchus" message but the count stays at 0 (reported in-game from a freestanding rupee spot).
 
 ## Time of day before the Deku Tree (open forest)
 
@@ -337,6 +387,16 @@ node's constant input `Int_A = 7` equals the live fence count. The option sets t
 event flow also keeps a "cuccos left" counter that starts at 7 and is compared with 7 for her dialogue, so
 both of those become 1 too. Her reward stays randomized.
 
+## Small Chests Only (experimental)
+
+Off by default. Every chest location whose stage actor is a big chest (`Obj_TBox_A_02`) or a Boss Key chest
+(`Obj_TBox_A_03`), or their `_NoBake` versions, is switched to the small chest (`Obj_TBox_A_01` /
+`Obj_TBox_A_01_NoBake`). The big chests' packs are built on the small one (they carry its ActorParam), so
+only the actor's `Gyaml` changes: its hash, links, `Dynamic` drop fields and save flag stay the same. That's
+51 placements, counting the child and adult copies of a stage separately. Shop chests (Treasure Chest Game)
+and the invisible Lens chests are left alone. Untested: whether the big chests' stage collision or
+lighting ("Bake") expects the bigger model.
+
 ## Requested but not possible from the game data
 
 - **Keysanity (keys anywhere).** The remake has one generic small key and one generic boss key (Ganon's
@@ -373,7 +433,7 @@ Cutscenes aren't removed outright, because the remake grants items and sets stor
 - **18 freestanding items**: Pieces of Heart, Fire Arrows at Lake Hylia and Ruto's Letter. Freestanding small
   keys follow the Small Keys setting.
 - **8 boss Heart Containers**, **100 Gold Skulltulas** (Tokensanity only)
-- **59 event rewards**: 12 songs, 9 dungeon rewards, 6 Great Fairies, 27 NPC and minigame rewards (including
+- **59 event rewards**: 12 songs, 9 dungeon rewards, 6 Great Fairies, 28 NPC and minigame rewards (including
   the upgrade NPCs and minigames listed below), and 5 Skulltula House rewards
 - **Up to 12 shop shelves** (Shopsanity)
 - **112 freestanding rupees** (**Shuffle Freestanding Rupees**, off by default):
@@ -389,7 +449,7 @@ Cutscenes aren't removed outright, because the remake grants items and sets stor
   - **Left alone:** silver rupees are puzzle pieces with linked counters, so they aren't touched.
 
 These are always left vanilla: the Ocarinas (unless Shuffle Ocarinas is on), the Master Sword, the adult trade sequence, the other capacity
-upgrades (wallets, bags, quivers), the bazaar and potion shops, Business Scrubs, cows and the Treasure Chest Game. The
+upgrades (bags and quivers), the bazaar and potion shops, Business Scrubs, cows and the Treasure Chest Game. The
 trap chests and the Hall of Fallen Foes are left untouched.
 
 ## How it works
@@ -432,9 +492,9 @@ items always show up later than they strictly need to.
 - **Testing in-game has started.** The first report found the bomb issue, which is fixed above. Everything
   else is verified offline only: every patched field reads back as the item in the spoiler, and every modified
   file parses again.
-- Settings marked *experimental* (Shopsanity, Tokensanity, songs Anywhere, own-dungeon keys) are the least
+- Settings marked *experimental* (Shopsanity, Shuffle Ocarinas, songs Anywhere, own-dungeon keys) are the least
   certain.
-- Chest "get" cutscene events are kept, because they carry story flags. A chest that used to hold, say, the Bow
+- Chest "get" cutscene events are kept, because they carry story flags. The exception is the Kokiri Sword chest's `Get_StoneOfForest_GetSword`: its Dm_Kokiri_0063 scene hands Link an unsaved sword (gone after reloading), so a randomized sword chest opens like a normal chest. A chest that used to hold, say, the Bow
   may still play the Bow's follow-up dialogue.
 - If something breaks, the spoiler tells you which location holds which item.
 

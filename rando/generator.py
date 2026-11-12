@@ -11,12 +11,12 @@ from . import gamedata
 from . import logic as L
 from . import settings as S
 from .pickups import PickupCloner
-from .qol import (patch_anju, patch_dodongo_bag_bombs, patch_dungeon_restart, patch_egg_hatch_guard, patch_gs_death,
-                  patch_saria_song, patch_song_teaching)
+from .qol import (patch_anju, patch_dodongo_bag_bombs, patch_egg_hatch_guard, patch_gs_death,
+                  patch_ocarina_bridge, patch_open_forest_mido, patch_saria_song, patch_song_teaching)
 from .shops import ShopPatcher
 from .world import World, JUNK
 
-VERSION = "0.2.0"
+VERSION = "0.4.0"
 BOMB_LIFT_PARAM = "Component/LiftableParam/Item_Bomb.game__component__LiftableParam.bgyml"
 BOMB_PACKS = ["Pack/Actor/Item_Bomb.pack.zs", "Pack/Actor/Npc_Hylia_ImperialSoldier_Bomb.pack.zs",
               "Pack/Actor/Obj_BombFlower_A_01.pack.zs", "Pack/Actor/Obj_BombFlower_A_04.pack.zs",
@@ -25,10 +25,19 @@ BRACELET_GRADE = 3655598229      # LiftableGrade granted by the Goron Bracelet
 DEFAULT_GRADE = 3069107721       # grade of pots, small rocks, Bombchus (no bracelet needed)
 SKIP_SETTING = "Event/EventSetting/EventSettingComponent/SkipSetting/DisableSkip.engine__event__SkipSetting.bgyml"
 SHOP_FORBIDDEN = {"Heart_Piece", "Heart_Container", "Token_Gold", "Bottle", "Bottle_Milk", "Bottle_Letter",
-                  "WeirdEgg", "ZeldaLetter", "BombBag_Medium", "BulletBag_Medium", "Quiver_Medium"}
+                  "WeirdEgg", "ZeldaLetter", "BombBag_Medium", "BulletBag_Medium", "Quiver_Medium",
+                  "Wallet_Medium", "Wallet_Large"}
 UPGRADES = {"Wallet_Medium", "Wallet_Large", "BombBag_Medium", "BombBag_Large"}
 REWARDS = {"Stone_Forest", "Stone_Fire", "Stone_Water", "Medal_Forest", "Medal_Fire", "Medal_Water",
            "Medal_Shadow", "Medal_Spirit", "Medal_Light"}
+SHOP_FORBIDDEN |= REWARDS
+
+# Skip Child Zelda: the checks whose items a new save already owns (gamedata.grant_start_items)
+START_LOCATIONS = ("event:HC Zeldas Letter", "event:HC Malon Egg", "event:Song from Impa")
+# Items the save can't simply be given (they need ammo, capacity, hearts, magic or a bottle slot set up too)
+START_DENY_PREFIXES = ("Heart_", "Token_Gold", "Bottle", "BombBag_", "Quiver_", "BulletBag_", "Wallet_", "NutBag_",
+                       "StickBag_", "Range_", "FairyBless_", "Arrow_", "Bombchu", "Bomb", "Deku", "Rupee_",
+                       "MagicJar_", "ArrowBundle", "ScrubBusinessSeed")
 
 
 class GenerationError(Exception):
@@ -36,8 +45,10 @@ class GenerationError(Exception):
 
 
 # Refills that are useless without their container: the item a chest checks for before giving them.
+# Bombchus count against the Bomb Bag (Item_Bombchu's PouchContentParam: MaxNumGameData "Bomb"), so without a
+# bag they are lost: the get message says "5 Bombchus" but the count stays at 0.
 REFILL_CONTAINERS = (("ArrowBundle", "Item_Range_Bow"), ("BombBundle", "Item_BombBag_Small"),
-                     ("DekuSeedBundle", "Item_Range_SlingShot"))
+                     ("BombchuBundle", "Item_BombBag_Small"), ("DekuSeedBundle", "Item_Range_SlingShot"))
 REFILL_FALLBACK = "Rupee_Blue"
 
 # Maps & Compasses "Start With": what their checks hold instead (item, weight). Never progression.
@@ -50,7 +61,23 @@ START_WITH_BONUS = [("Rupee_Blue", 3), ("Rupee_Red", 5), ("Rupee_Purple", 4), ("
 # game's conditional-chest check: own the Bigger one (CheckActor) -> the Biggest (Substitute), else Bigger.
 PROGRESSIVE_UPGRADES = {"BombBag_Medium": ("Item_BombBag_Medium", "Item_BombBag_Large"),
                         "BulletBag_Medium": ("Item_BulletBag_Medium", "Item_BulletBag_Large"),
-                        "Quiver_Medium": ("Item_Quiver_Medium", "Item_Quiver_Large")}
+                        "Quiver_Medium": ("Item_Quiver_Medium", "Item_Quiver_Large"),
+                        "Wallet_Medium": ("Item_Wallet_Medium", "Item_Wallet_Large")}
+# The Skulltula House wallets go into the pool as two Adult's Wallets that only chests may hold: a chest's
+# conditional check gives the Giant's Wallet if you already own the Adult's one. Handed out by an event, a
+# Giant's Wallet found first could later be "downgraded" by the Adult's Wallet.
+PROGRESSIVE_WALLET = "Wallet_Medium"
+
+
+# Chest "get" events that act out the vanilla item. Get_StoneOfForest_GetSword (the Kokiri Sword chest) plays
+# Dm_Kokiri_0063, where Link swings the sword: he ends up holding a Kokiri Sword that isn't in the save, so
+# it is gone after reloading. A randomized chest uses the normal chest event instead.
+ITEM_GET_EVENTS = {"Get_StoneOfForest_GetSword"}
+
+# Small Chests Only: big chest -> small chest. Obj_TBox_A_02 (big) and A_03 (Boss Key) are built on A_01 (their
+# packs carry Obj_TBox_A_01's ActorParam), so only the stage actor's Gyaml changes; NoBake stays NoBake.
+SMALL_CHEST = {"Obj_TBox_A_02": "Obj_TBox_A_01", "Obj_TBox_A_03": "Obj_TBox_A_01",
+               "Obj_TBox_A_02_NoBake": "Obj_TBox_A_01_NoBake", "Obj_TBox_A_03_NoBake": "Obj_TBox_A_01_NoBake"}
 
 
 def refill_container(item):
@@ -91,6 +118,8 @@ class Plan:
                     # King Zora is already moved: the letter would be a dead item, give an empty bottle
                     self.fixed[loc.id] = self.forced[loc.id] = "Bottle"
         self.excluded = {l.id for l in self.shuffled if l.id in excluded or l.name in excluded}
+        self.start_locs = set(START_LOCATIONS) if st["skip_child_zelda"] else set()
+        self._grantable = {}
         self.pool = [l.vanilla for l in self.shuffled]
         self._adjust_pool()
 
@@ -157,6 +186,8 @@ class Plan:
         if st["open_zora"] == "open":
             # Ruto's Letter can't be delivered with an open Fountain; an empty bottle takes its place
             self.pool = ["Bottle" if i == "Bottle_Letter" else i for i in self.pool]
+        if st["shuffle_house"]:
+            self.pool = [PROGRESSIVE_WALLET if i == "Wallet_Large" else i for i in self.pool]
         if st["shuffle_ocarinas"]:
             # Saria's bridge gift is switched off (gamedata.planned_changes); her Fairy Ocarina replaces junk
             rng = random.Random(hashlib.sha256(("ocarina|" + self.seed_key).encode()).digest())
@@ -184,16 +215,34 @@ class Plan:
                 new.append(i)
             self.pool = new
 
+    def grantable(self, item):
+        """Skip Child Zelda: can a new save simply own `item` (its 'obtained' flag plus a pouch count of 1)?"""
+        if item not in self._grantable:
+            ok = "@" not in item and item not in REWARDS and not item.startswith(START_DENY_PREFIXES)
+            if ok and not _is_song(item):
+                from . import gamedata
+                try:
+                    ok = gamedata.pouch_entry_exists(self.world, self.world.actor_for(item, "event"))
+                except KeyError:
+                    ok = False
+            self._grantable[item] = ok
+        return self._grantable[item]
+
     # which shuffled locations may receive `item`
     def allowed(self, loc, item):
         st = self.st
         if loc.id in self.excluded and (item in L.PROGRESSION or _dungeon_item_type(item) or item in REWARDS):
             return False
-        is_reward_loc, is_song_loc = loc.category == "reward", loc.category == "song"
-        if item in REWARDS:
-            return is_reward_loc
-        if is_reward_loc:
+        if loc.id in self.start_locs and not self.grantable(item):
             return False
+        if item == PROGRESSIVE_WALLET and loc.kind != "chest":
+            return False
+        is_reward_loc, is_song_loc = loc.category == "reward", loc.category == "song"
+        if st["shuffle_rewards"] != "anywhere":
+            if item in REWARDS:
+                return is_reward_loc
+            if is_reward_loc:
+                return False
         if _is_song(item):
             if st["shuffle_songs"] == "song":
                 return is_song_loc
@@ -289,9 +338,10 @@ class Filler:
     def run(self):
         plan = self.plan
         pool = list(plan.pool)
+        anywhere = plan.st["shuffle_rewards"] == "anywhere"
         groups = [
             [i for i in pool if "@" in i],
-            [i for i in pool if i in REWARDS],
+            [] if anywhere else [i for i in pool if i in REWARDS],
             [i for i in pool if _is_song(i)],
         ]
         used = Counter()
@@ -306,8 +356,18 @@ class Filler:
         self.place_group(groups[1], [i for i in groups[2] + prog_rest if i in L.PROGRESSION])
         self.place_group(groups[2], [i for i in prog_rest if i in L.PROGRESSION])
         self.place_group(prog_rest, [])
-        empty = [l for l in plan.shuffled if l.id not in self.placed]
         self.rng.shuffle(junk_rest)
+        for lid in sorted(plan.start_locs):
+            # Skip Child Zelda: fill an empty start check with junk the save can grant (a shield, Farore's Wind...)
+            loc = self.locs[lid]
+            if lid in self.placed or loc not in plan.shuffled:
+                continue
+            item = next((i for i in junk_rest if plan.allowed(loc, i)), None)
+            if item is None:
+                raise GenerationError("no item the save can grant for %s" % loc.name)
+            junk_rest.remove(item)
+            self.placed[lid] = item
+        empty = [l for l in plan.shuffled if l.id not in self.placed]
         junk_rest.sort(key=lambda i: 0 if i in SHOP_FORBIDDEN else 1)   # restricted junk first
         self.rng.shuffle(empty)
         refills = plan.st.get("refill_needs_item")
@@ -393,7 +453,10 @@ def generate(romfs, out_dir, settings, seed=None, mod_name=None, progress=print,
     if st["create_spoiler"]:
         write_spoiler(world, plan, filler, seed, sstr, mod_root)
         from .checklist import write_checklist      # contains every placement, so only with the spoiler
-        write_checklist(world, plan, filler, mod_root, VERSION, seed, sstr)
+        try:
+            write_checklist(world, plan, filler, mod_root, VERSION, seed, sstr)
+        except ImportError:
+            progress("note: checklist.xlsx skipped (openpyxl missing; run Install Requirements.bat)")
     with open(os.path.join(mod_root, "settings.txt"), "w", encoding="utf-8") as fh:
         fh.write("OoTR Remake %s\nSeed: %s\nSettings string: %s\n" % (VERSION, seed, sstr))
     progress("Done in %.1fs: %d files written to %s" % (time.time() - t0, len(written), mod_root))
@@ -452,6 +515,9 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
                 hits += 1
                 if loc.kind == "chest":
                     dyn = a.setdefault("Dynamic", {})
+                    if dyn.get("GetEventName") in ITEM_GET_EVENTS and item != loc.vanilla:
+                        # the chest's own event hands out its vanilla item again (unsaved), so drop it
+                        del dyn["GetEventName"]
                     if item in PROGRESSIVE_UPGRADES:
                         bigger, biggest = PROGRESSIVE_UPGRADES[item]
                         if world.actor_exists(bigger) and world.actor_exists(biggest):
@@ -477,6 +543,27 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
         if hits != len(edits):
             raise GenerationError("%s: expected %d actors, patched %d" % (rel, len(edits), hits))
         emit(rel, orig, F.byml_dump(root), dname)
+
+    if plan.st.get("small_chests"):
+        shrink = defaultdict(set)
+        for loc in world.locations:
+            if loc.kind == "chest":
+                for rel, h in loc.stage_refs:
+                    shrink[rel].add(h)
+        n = 0
+        for rel, hashes in sorted(shrink.items()):
+            orig, dname = read(rel)
+            root = F.byml_load(orig)
+            hit = 0
+            for a in root.get("Actors", []):
+                small = SMALL_CHEST.get(a.get("Gyaml"))
+                if small and int(a["Hash"]) in hashes and world.actor_exists(small):
+                    a["Gyaml"] = small
+                    hit += 1
+            if hit:
+                n += hit
+                emit(rel, orig, F.byml_dump(root), dname)
+        progress("Small chests: %d big chest placements now use the small chest" % n)
 
     for rel, edits in sorted(event_edits.items()):
         orig, dname = read(rel)
@@ -511,7 +598,11 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
             new_sub = F.byml_patch_root_u32(sub, "LiftGrade", DEFAULT_GRADE)
             emit(rel, orig, orig[:r0] + new_sub + orig[r1:], dname)
 
-    gd_ok = gamedata.apply(world, plan.st, read, emit, progress)
+    bridge_ok = bool(plan.st["shuffle_ocarinas"]) and patch_ocarina_bridge(world, emit, progress, read)
+    start_items = [world.actor_for(placed.get(lid, plan.fixed.get(lid)), "event")
+                   for lid in sorted(plan.start_locs) if placed.get(lid, plan.fixed.get(lid))]
+    gd_ok = gamedata.apply(world, plan.st, read, emit, progress, ocarina_bridge_patched=bridge_ok,
+                           start_items=start_items)
 
     if plan.st.get("saria_song_ocarina"):
         if gd_ok:
@@ -519,6 +610,8 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
         else:
             progress("warning: could not add the ocarina save flag; Saria's Song still needs Zelda")
 
+    if plan.st["open_forest"] == "open":
+        patch_open_forest_mido(world, emit, progress, read)
     if plan.st["shuffle_songs"] != "vanilla":
         patch_song_teaching(world, emit, progress, read)
     if plan.st["shuffle_weird_egg"] and plan.st["shuffle_npc"]:
@@ -529,9 +622,6 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
         # the logic already counted bag bombs for the entrance, so the seed would not be safe
         raise GenerationError("Dodongo's Cavern boulder logic not recognised in this romfs; "
                               "turn off 'Bag Bombs Open Dodongo's Cavern'")
-
-    if plan.st.get("dungeon_restart_entrance"):
-        patch_dungeon_restart(world, emit, progress, read)
 
     if plan.st.get("tokensanity", "off") != "off":
         patch_gs_death(world, emit, progress, read)

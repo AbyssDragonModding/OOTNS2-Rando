@@ -1,0 +1,9 @@
+# Extracted from the user's own game: never commit or distribute these.
+icons/
+*.png
+*.bntx
+*.zs
+
+# Per-user files
+settings.json
+__pycache__/

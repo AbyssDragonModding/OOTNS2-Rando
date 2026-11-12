@@ -28,6 +28,7 @@ only the files it changes into a new mod folder. Share seeds and settings string
 - [Installing the seed in your emulator](#installing-the-seed-in-your-emulator)
 - [Testing and reporting problems](#testing-and-reporting-problems)
 - [Settings](#settings)
+- [Tools](#tools)
 - [Supported game versions](#supported-game-versions)
 - [Known issues](#known-issues)
 - [Versions](#versions)
@@ -129,8 +130,7 @@ python3 ootr_remake.pyw
     settings.txt      <- version, seed and settings string
     spoiler.txt       <- where every item is, plus a playthrough
     spoiler.json      <- the same, for tools
-    checklist.xlsx    <- test checklist with Pass/Fail dropdowns and colours
-    checklist.csv     <- the same checklist as plain text
+    checklist.xlsx    <- test checklist with Pass/Partial/Fail dropdowns and colours
 ```
 
 The spoiler and checklist files are only written when **Create Spoiler Log** (Other tab) is on, because they
@@ -154,8 +154,8 @@ themselves from their own romfs. Your last folders and settings are remembered b
 
 ### The checklist
 
-Every seed with a spoiler log comes with a test checklist: `checklist.xlsx` (recommended) and
-`checklist.csv` (the same data without formatting). It has two blocks side by side.
+Every seed with a spoiler log comes with a test checklist, `checklist.xlsx`. It has two blocks side by
+side.
 
 **Left block (columns A–G): the seed and its settings**
 
@@ -163,55 +163,50 @@ Every seed with a spoiler log comes with a test checklist: `checklist.xlsx` (rec
 |---|---|
 | Version, Seed, Settings String | The seed's identity. Copy these into bug reports. |
 | Emulator / Tester | Fill this in yourself: emulator name and version, and your name if you like |
-| Settings, Passed, Failed, Untested | Running totals for the settings, next to the seed info; they update as you fill in Result |
+| Settings, Passed, Partial, Failed, Untested | Running totals for the settings, next to the seed info; they update as you fill in Result |
 | **Category**, **Setting**, **Value** | Every setting this seed uses, grouped by tab |
 | **Expected In-Game** | What the setting should do in the game (blank when there's nothing to see) |
 | **How to Test** | A quick way to check it |
-| **Result** | `Pass`, `Fail`, or empty if you haven't tested it |
+| **Result** | `Pass`, `Partial`, `Fail`, or empty if you haven't tested it |
 | **Notes** | What you saw, especially for anything that failed |
 
 **Right block (columns J–O): the checks**
 
 | Rows / column | What it is |
 |---|---|
-| Checks, Passed, Failed, Untested | Running totals; they update as you fill in Result |
+| Checks, Passed, Partial, Failed, Untested | Running totals; they update as you fill in Result |
 | **Region** | The area, e.g. Kokiri Forest. Checks are grouped by region in roughly the order you visit them. |
 | **Location** | The check's name (the same name as in the spoiler) |
 | **Vanilla Item** | What's there in the normal game |
 | **Randomized Item** | What should be there in this seed. Shop items show their price. Ammo chests note when they give a Blue Rupee instead because you don't have the matching bag yet. |
-| **Result** | `Pass`, `Fail`, or empty |
+| **Result** | `Pass`, `Partial`, `Fail`, or empty |
 | **Notes** | What happened |
 
-**Result** uses a Pass/Fail dropdown rather than a checkbox. A checkbox only has two states, so "not tested
-yet" would look the same as "failed". In `checklist.xlsx`, picking **Pass** turns the cell green and **Fail**
-turns it red.
+**Result** is a dropdown rather than a checkbox, because a checkbox can't tell "not tested yet" from
+"failed":
+
+| Result | Colour | Use it when |
+|---|---|---|
+| **Pass** | green | It works as described |
+| **Partial** | orange | It mostly works, but something is off. Say what in **Notes**. |
+| **Fail** | red | It doesn't work |
+| *(empty)* | none | You haven't tested it yet |
 
 ### Opening the checklist in Google Sheets
-
-**With `checklist.xlsx` (dropdowns and colours included):**
 
 1. Go to [sheets.google.com](https://sheets.google.com) and open a **Blank spreadsheet**.
 2. Choose **File** > **Import** > **Upload**, and drop in `checklist.xlsx`.
 3. Set **Import location** to **Replace spreadsheet** and click **Import data**.
-4. Rename the spreadsheet (top left) to the seed, e.g. `OoTR 0.2.0 U5R6C3SVEJ`.
+4. Rename the spreadsheet (top left) to the seed, e.g. `OoTR 0.3.1 U5R6C3SVEJ`.
 
-**With `checklist.csv`:**
-
-1. Import it the same way, with **Replace spreadsheet** and **Separator type: Detect automatically**. Leave
-   **Convert text to numbers, dates, and formulas** ticked, so the totals work.
-2. Add the dropdown: select the Result cells (`N7` down to the last check, and `F7` down to the last setting),
-   choose **Insert** > **Dropdown**, and enter the two options `Pass` and `Fail`.
-3. Add the colours: with the same cells selected, choose **Format** > **Conditional formatting**. Set
-   **Format cells if...** to **Text is exactly**, type `Pass` and pick a green fill. Click **Add another
-   rule** and do the same with `Fail` and a red fill.
-
-Excel and LibreOffice open both files directly as well.
+The dropdowns, colours and totals come along with the import. Excel and LibreOffice open the file directly
+as well.
 
 Tips while playing:
 - **Data** > **Create a filter** on the checks block lets you show one region, or only failed checks.
 - You don't have to test everything. A few checks in each region you visit, and every setting you can see
   in-game, already help a lot.
-- For anything that fails, write what happened in **Notes**: the item didn't appear, couldn't be picked up,
+- For anything that fails or partly works, write what happened in **Notes**: the item didn't appear, couldn't be picked up,
   wrong item or text, came back after leaving or reloading, softlock, or crash. Mention what you were doing
   and which items you had, if it seems relevant.
 
@@ -220,7 +215,8 @@ Tips while playing:
 When you're done (or when something breaks):
 
 1. In Google Sheets, choose **File** > **Download** > **Comma Separated Values (.csv)**. This downloads the
-   checklist with your results and notes. In Excel, use **File** > **Save As** > **CSV UTF-8**.
+   checklist with your results and notes as a `.csv` file, which is what bug reports use. In Excel, use
+   **File** > **Save As** > **CSV UTF-8**.
 2. Keep the layout as it is: don't move columns or delete the top rows. The exported file then lines up with
    the original checklist, so the results can be matched check by check.
 
@@ -243,17 +239,82 @@ The GUI explains every option when you hover over it. In short:
 
 | Tab | What you can change |
 |---|---|
-| **Main Rules** | Logic (glitchless or none); open Kokiri Forest, Zora's Fountain and the Door of Time; skip Epona's race; Saria's Song with just an ocarina; what gets shuffled: songs, dungeon rewards, Kokiri Sword, Weird Egg, ocarinas, freestanding items, freestanding rupees, boss Heart Containers, NPC and minigame rewards, Great Fairies, Skulltula House rewards, Gold Skulltula tokens (Tokensanity) and shop items (Shopsanity) |
+| **Main Rules** | Logic (glitchless or none); open Kokiri Forest, Zora's Fountain, the Door of Time and Death Mountain; skip child Zelda (experimental); skip Epona's race; Saria's Song with just an ocarina; what gets shuffled: songs, Spiritual Stones and Medallions (experimental, in boss rewards or anywhere), Kokiri Sword, Weird Egg, ocarinas, freestanding items, freestanding rupees, boss Heart Containers, NPC and minigame rewards, Great Fairies, Skulltula House rewards, Gold Skulltula tokens (Tokensanity) and shop items (Shopsanity) |
 | **Dungeon Items** | Maps & Compasses (vanilla, own dungeon, removed or start with), small keys and boss keys |
-| **Other** | Item pool size; quality of life (skippable cutscenes, no area intros (experimental), bombs without the Goron Bracelet, bag bombs open Dodongo's Cavern, Anju needs 1 cucco, ammo chests need their bag, load saves at the dungeon entrance); spoiler log |
+| **Other** | Item pool size; quality of life (skippable cutscenes, no area intros (experimental), bombs without the Goron Bracelet, bag bombs open Dodongo's Cavern, Anju needs 1 cucco, ammo chests need their bag, small chests only (experimental)); spoiler log |
 | **Exclusions** | Locations that only ever hold minor items |
 | **Not Supported** | Classic randomizer options the remake's data can't support yet, and why |
 
 Settings marked **experimental** work in offline checks but haven't been confirmed in a full playthrough.
 These are the ones most worth testing.
 
+### Test results
+
+Results from in-game test runs, taken from the testers' exported checklists. A setting loses its
+*experimental* tag once a test confirms it fully works. Settings that aren't listed haven't been confirmed
+yet.
+
+**Working**
+
+| Setting | Value tested | Version |
+|---|---|---|
+| Kokiri Forest | Open, Closed | 0.2.1 |
+| Open Death Mountain | Off | 0.3.1 |
+| Saria's Song With Just an Ocarina | On | 0.2.1 |
+| Shuffle Songs | Song Locations | 0.3.1 |
+| Shuffle Kokiri Sword | Off | 0.2.1 |
+| Shuffle Weird Egg (experimental) | Off | 0.3.1 |
+| Shuffle Freestanding Items | On | 0.2.1 |
+| Shuffle Freestanding Rupees | On, Off | 0.2.1, 0.3.1 |
+| Shuffle Boss Heart Containers | On | 0.3.1 |
+| Tokensanity | All Tokens, Dungeons Only | 0.2.1, 0.3.1 |
+| Make All Cutscenes Skippable | On | 0.2.1 |
+| Bag Bombs Open Dodongo's Cavern | On | 0.3.1 |
+| Refills Need Their Item | On | 0.2.1 |
+| Anju Needs Only 1 Cucco | On | 0.2.1 |
+| Bombs Usable Without Goron Bracelet | On | 0.2.1 |
+
+**Partly working**
+
+| Setting | Value tested | Version | Notes |
+|---|---|---|---|
+| Zora's Fountain | Open | 0.3.1 | Ruto's Letter at Lake Hylia was correctly replaced by an empty bottle, but King Zora hadn't moved. Fixed in 0.4.0: the Zora quest now starts where showing him the letter leaves it. |
+| Shuffle Ocarinas (experimental) | On | 0.3.1 | Crossing the forest bridge after the Deku Tree no longer plays Saria's goodbye or gives the Fairy Ocarina, as intended. Saria is there for her opening greeting outside Link's house (fixed in 0.3.1). Finding the Ocarina of Time before the Fairy Ocarina works. The Ocarina of Time check itself hasn't been tested yet. |
+| Shuffle NPC & Minigame Rewards | On | 0.3.1 | Child fishing and the Lost Woods slingshot targets tested. The Big Poe buyer always gave the bottle: it wasn't a check yet. Added as "Market Big Poe Bottle" in 0.4.0. |
+| Shuffle Skulltula House Rewards | On | 0.3.1 | The 20+ token rewards were random, but the 10 token reward was still the Adult's Wallet (the wallets were kept vanilla on purpose). Since 0.4.0 all five are random and the wallets are in chests. |
+
+**Not working**
+
+| Setting | Version | What happened |
+|---|---|---|
+| Load Saves at Dungeon Entrance | 0.2.1 | Never moved the restart point. Removed in 0.3.0. |
+| Skip Area Intro Cutscenes (experimental) | 0.2.0 | The intros still play. Off by default. |
+
 How each setting is implemented, and what the remake makes impossible (keysanity, scrubsanity and others), is
 described in [docs/TECHNICAL.md](docs/TECHNICAL.md).
+
+## Tools
+
+### Item tracker
+
+`Tools/OOTNS2-Tracker` is an item tracker for the remake. It shows items, songs, stones and medallions,
+upgrades and counters (Gold Skulltulas, Pieces of Heart, keys) as a grid you click through while you play.
+
+- **Left click** steps an item up a tier or adds 1, **right click** steps it back down. **Shift + click**
+  on a counter steps by 5.
+- **File** menu: New, Open, Save and Save As (JSON). The last save reopens when you start it.
+- **No game files are included.** On first start it asks for the romfs folder you extracted from your own
+  game and takes the item icons from it. The icons stay on your PC (`icons/` is never committed).
+
+It needs Python 3.14 or newer and a Vulkan-capable graphics driver. To run it:
+
+```
+cd Tools/OOTNS2-Tracker
+pip install -r requirements.txt
+python tracker.pyw
+```
+
+More in [Tools/OOTNS2-Tracker/README.md](Tools/OOTNS2-Tracker/README.md).
 
 ## Supported game versions
 
@@ -279,6 +340,10 @@ you're on the latest of both, open an issue with the hash the randomizer shows.
 - **The logic is cautious:** it may expect an item earlier than you strictly need it, so some items show up
   later than they could.
 - Settings marked *experimental* are the least certain.
+- **Zelda's Letter and the Cucco share a slot:** the remake keeps the child trade items in one slot, so while
+  you're holding Zelda's Letter you can't use the Cucco from the Weird Egg. Show the letter to the Kakariko
+  gate soldier first (with Open Death Mountain off). This is how the game works, so it can't be fixed.
+- **Bag Bombs Open Dodongo's Cavern:** the cavern still plays its opening cutscene.
 
 ## Versions
 

@@ -94,101 +94,6 @@ def patch_gs_death(world, emit, progress, read):
     emit(GS_DEATH, orig, F.byml_dump(root, version=F.BymlReader(orig).ver), None, compressed=False)
 
 
-# --- Dungeon restart point ---------------------------------------------------------------------
-# Each dungeon quest's GameSafetySetting names a NoEscapeRangeAreaBox ("NoEscapeArea_<x>") and a
-# StartPos anchor ("StartPos_<x>"), normally the boss room and its door. A save loaded inside the box
-# while the quest is active restarts at the anchor. Stretch the boxes over the whole dungeon and point
-# the setting at a new anchor ("StartPos_Rando_<dungeon>", a copy of the entrance start point).
-# The original anchors stay where they are: bosses link to them (Gohma references
-# StartPos_Get_StoneOfForest and puts Link there when the fight starts), so moving them warps Link to
-# the entrance mid-fight.
-DUNGEON_ENTRANCES = {
-    "InsideTheDekuTree": "Entrance", "DodongoCavern": "DodongoCavern_MountainTrailSide",
-    "InsideJabuJabuBelly": "InsideJabuJabuBelly_FromZoraFountain", "ForestTemple": "ForestTemple",
-    "FireTemple": "FireTemple", "WaterTemple": "WaterTemple_FromLakeHylia", "ShadowTemple": "Entrance",
-    "SpiritTemple": "SpiritTemple_Entrance", "BottomOfTheWell": "Well_KakarikoSide",
-    "InsideGanonCastle": "Entrance",
-}
-NO_ESCAPE_MARGIN = 40.0
-# boxes that also exist in a stage outside the dungeon (Ganon's tower uses Defeat_Ganon too); the
-# setting row is global, so pointing it at a dungeon-only anchor would break the other stage
-SHARED_NO_ESCAPE = {"NoEscapeArea_Defeat_Ganon"}
-
-
-def _new_actor_hash(seed, taken):
-    import hashlib
-    n = 0
-    while True:
-        h = int.from_bytes(hashlib.sha1(("%s/%d" % (seed, n)).encode()).digest()[:8], "little")
-        if h and h not in taken:
-            return h
-        n += 1
-
-
-def patch_dungeon_restart(world, emit, progress, read):
-    import copy
-    import glob
-    gss_rel = world._find("RSDB", "GameSafetySetting")
-    gss_data, gss_dname = read(gss_rel)
-    gss = F.byml_load(gss_data)
-    gss_changed = False
-    for dg, entrance in DUNGEON_ENTRANCES.items():
-        rels = sorted(os.path.relpath(p, world.romfs).replace("\\", "/")
-                      for p in glob.glob(os.path.join(world.romfs, "Banc", dg, dg + "_*.bcett.byml.zs")))
-        roots = {}
-        for rel in rels:
-            data, dname = read(rel)
-            roots[rel] = (data, dname, F.byml_load(data))
-        actors = [a for _, _, r in roots.values() for a in r.get("Actors", [])]
-        anchor = next((a for a in actors if a.get("Gyaml") == "StartPos" and a.get("Name") == entrance), None)
-        pts = [a["Translate"] for a in actors if "Translate" in a]
-        if anchor is None or not pts:
-            progress("warning: %s entrance not found; dungeon restart unchanged there" % dg)
-            continue
-        lo = [min(p[i] for p in pts) for i in range(3)]
-        hi = [max(p[i] for p in pts) for i in range(3)]
-        tmpl = type(pts[0][0])
-        boxes = set()
-        changed_rels = set()
-        for rel, (data, dname, r) in roots.items():
-            for a in r.get("Actors", []):
-                name = str(a.get("Name", ""))
-                if (a.get("Gyaml") == "NoEscapeRangeAreaBox" and name.startswith("NoEscapeArea_")
-                        and name not in SHARED_NO_ESCAPE):
-                    a["Translate"] = [tmpl((lo[i] + hi[i]) / 2) for i in range(3)]
-                    a["Scale"] = [tmpl(hi[i] - lo[i] + 2 * NO_ESCAPE_MARGIN) for i in range(3)]
-                    a.pop("Rotate", None)
-                    boxes.add(name)
-                    changed_rels.add(rel)
-        rows = [row for row in gss if row.get("NoEscapeRangeAreaName") in boxes]
-        if not rows:
-            progress("note: %s has no quest restart area; dungeon restart unchanged there" % dg)
-            continue
-        # the new anchor goes in the same file as the entrance start point
-        new_name = "StartPos_Rando_" + dg
-        taken = {int(a["Hash"]) for a in actors if "Hash" in a}
-        new = copy.deepcopy(anchor)
-        h = type(anchor["Hash"])(_new_actor_hash(new_name, taken))
-        new["Hash"] = h
-        new["Name"] = new_name
-        new.pop("Links", None)
-        if isinstance(new.get("Phive"), dict) and isinstance(new["Phive"].get("Placement"), dict):
-            new["Phive"]["Placement"]["ID"] = h
-        for rel, (data, dname, r) in roots.items():
-            if any(a is anchor for a in r.get("Actors", [])):
-                r["Actors"].append(new)
-                changed_rels.add(rel)
-                break
-        for rel in sorted(changed_rels):
-            data, dname, r = roots[rel]
-            emit(rel, data, F.byml_dump(r), dname)
-        for row in rows:
-            row["NoEscapeRangeAnchorName"] = new_name
-            gss_changed = True
-    if gss_changed:
-        emit(gss_rel, gss_data, F.byml_dump(gss, version=F.BymlReader(gss_data).ver), gss_dname)
-
-
 # --- Dodongo's Cavern boulder and bag bombs ------------------------------------------------------
 # Logic/DeathMountainTrail_Child_Prefab_ffa7: the boulder (node 7, ActorLogicDeathProcComplete) breaks
 # when its break event runs. The event is requested by node 14 = OperateAND(node 6 output 5, node 5),
@@ -268,6 +173,58 @@ def patch_song_teaching(world, emit, progress, read):
     if n < len(TAUGHT_SONGS):
         progress("warning: only %d of %d song-teaching gifts found; some songs may also be given vanilla"
                  % (n, len(TAUGHT_SONGS)))
+
+
+# --- Open forest: Mido has already let you pass -------------------------------------------------
+# Clearing Mido's blocker flag only removes his invisible wall. Where he stands comes from his AI schedule
+# (Component/AIScheduleParam/Npc_Kokiri_Mido_Child): he guards the path until Meet_DekuTree_IsAfter_Step02_Exp,
+# i.e. until the "Meet the Deku Tree" quest reaches Step02, which his own flow does after the sword-and-shield
+# check (then Step03). The opening cutscene (OpeningEvent) starts that quest at Step01; with Open forest it
+# starts it at Step03 instead, the state the quest is in right after Mido steps aside. The Deku Tree scene
+# (Dm_Kokiri_0075) still completes it.
+OPENING_FLOW = "Event/EventFlow/OpeningEvent.bfevfl.zs"
+MIDO_DONE_STEP = "Step03"
+
+
+def patch_open_forest_mido(world, emit, progress, read):
+    data, dname = read(OPENING_FLOW)
+    ev = F.EvflFile(data)
+    hits = [e for fc in ev.flowcharts for e in fc["events"]
+            if e.get("action") == "EventExecuteProgressChallengeStep" and isinstance(e.get("params"), dict)
+            and e["params"].get("ChallengeName") == "Meet_DekuTree" and e["params"].get("StepName") == "Step01"]
+    if len(hits) != 1:
+        progress("warning: opening quest step not recognised (%d matches); Mido may still block the Deku Tree"
+                 % len(hits))
+        return False
+    ev.set_string_param(hits[0]["ptrs"]["StepName"], MIDO_DONE_STEP)
+    F.EvflFile(ev.data())                                   # sanity: must still parse
+    emit(OPENING_FLOW, data, ev.data(), dname)
+    return True
+
+
+# --- Shuffle Ocarinas: no goodbye on the forest bridge ---------------------------------------------
+# Saria's goodbye (Goto_HyruleCastle :KokiriForest_ArriveLostWood -> Dm_Kokiri_0150 / 0155, which give the Fairy
+# Ocarina) is requested by the bridge area trigger only while Dm_Kokiri_0150 hasn't been played
+# (HoldGameDataHavePlayedEvent, EventName "Dm_Kokiri_0150"). Point that check at Dm_Kokiri_0045 instead, the
+# greeting outside Link's house that always plays first (it opens the house door), so the trigger never fires.
+# Marking 0150 as seen in the save did the same, but Saria's forest AI schedule and logic also read that flag
+# and treated her as gone from the start, so the greeting played without her.
+OCARINA_BRIDGE_AINB = "Logic/KokiriForest_Child_Level_All_02_ddcd.logic.module.ainb"
+OCARINA_BRIDGE_EVENT = "Dm_Kokiri_0150"
+OCARINA_BRIDGE_ALWAYS_PLAYED = "Dm_Kokiri_0045"
+
+
+def patch_ocarina_bridge(world, emit, progress, read):
+    if not os.path.exists(os.path.join(world.romfs, *OCARINA_BRIDGE_AINB.split("/"))):
+        return False
+    orig = read(OCARINA_BRIDGE_AINB)[0]
+    new, n = _ainb_repoint_string_const(orig, "EventName", OCARINA_BRIDGE_EVENT, OCARINA_BRIDGE_ALWAYS_PLAYED)
+    if n != 1:
+        progress("note: forest bridge trigger not recognised (%d matches); marking Saria's goodbye as seen instead"
+                 % n)
+        return False
+    emit(OCARINA_BRIDGE_AINB, orig, new, None, compressed=False)
+    return True
 
 
 # --- Weird Egg: only hatch when you have it -----------------------------------------------------

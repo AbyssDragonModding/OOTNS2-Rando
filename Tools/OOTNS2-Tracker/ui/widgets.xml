@@ -1,0 +1,39 @@
+<!--
+  Reusable tags for the tracker layouts (registered before the windows load).
+  <ItemCell Item="id"/> is one clickable tracker cell; its id is a key of items.CELLS.
+-->
+<Widgets>
+    <Widget Name="ItemCell" Item="">
+        <Border Name="cell_{Item}" Width="46" Height="46" Padding="2" CornerRadius="7"
+                Background="#1E2230" BorderColor="#2E3446" BorderWidth="1" Cursor="Hand">
+            <Overlay>
+                <Image Name="img_{Item}" Stretch="Fit"/>
+                <!-- count of counter cells (Skulltulas, keys...) -->
+                <Border Name="badge_{Item}" Padding="3,0" CornerRadius="5" Background="#000000C0"
+                        Visibility="Collapsed" HitTestable="false"
+                        Slot.HAlign="Right" Slot.VAlign="Bottom">
+                    <Label Name="cnt_{Item}" Text="" TextSize="11" Color="#FFFFFF"/>
+                </Border>
+                <!-- capacity of quantity upgrades (quiver, bomb bag, wallet...) -->
+                <Border Name="capbadge_{Item}" Padding="2,0" CornerRadius="5" Background="#000000C0"
+                        Visibility="Collapsed" HitTestable="false"
+                        Slot.HAlign="Right" Slot.VAlign="Top">
+                    <Label Name="cap_{Item}" Text="" TextSize="10" Color="#FFFFFF"/>
+                </Border>
+            </Overlay>
+        </Border>
+    </Widget>
+
+    <Widget Name="Section" Title="">
+        <VBox Spacing="3">
+            <Label Text="{Title}" TextSize="12" Color="#E8C872"/>
+            <WrapBox Spacing="3">
+                <Children/>
+            </WrapBox>
+        </VBox>
+    </Widget>
+
+    <Widget Name="DungeonName" Row="0" Text="">
+        <Label Text="{Text}" TextSize="11" Slot.Row="{Row}" Slot.Column="0" Slot.VAlign="Center"/>
+    </Widget>
+</Widgets>

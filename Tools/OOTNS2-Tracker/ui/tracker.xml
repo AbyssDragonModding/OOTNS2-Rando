@@ -1,0 +1,197 @@
+<!--
+  Main tracker window. Every <ItemCell Item="..."/> names a cell of items.py;
+  tracker.pyw fills in its icon and handles the clicks
+  (left = next tier / +1, right = previous tier / -1, Shift = 5 at a time on counters).
+  Sized for a stream overlay: a fixed 475 wide (9 cells per row); only the height resizes
+  (tracker.pyw snaps the width back, Raven has no maximum size).
+-->
+<Window Title="OoT Item Tracker" Width="475" Height="1080" MinWidth="475" MinHeight="480" Theme="Dark">
+    <VBox>
+        <MenuBar>
+            <Menu Title="File">
+                <MenuItem Text="New (reset all)" Shortcut="Ctrl+N" OnClicked="file_new"/>
+                <MenuItem Text="Open..." Shortcut="Ctrl+O" OnClicked="file_open"/>
+                <MenuItem Text="Save" Shortcut="Ctrl+S" OnClicked="file_save"/>
+                <MenuItem Text="Save As..." Shortcut="Ctrl+Shift+S" OnClicked="file_save_as"/>
+                <MenuItem Separator="true"/>
+                <MenuItem Text="Link romfs folder / re-extract icons..." OnClicked="file_relink"/>
+                <MenuItem Separator="true"/>
+                <MenuItem Text="Exit" OnClicked="file_exit"/>
+            </Menu>
+        </MenuBar>
+
+        <ScrollBox Slot.Fill="1">
+            <VBox Spacing="8" Slot.Padding="8">
+
+                <Section Title="Items">
+                    <ItemCell Item="sticks"/>
+                    <ItemCell Item="nuts"/>
+                    <ItemCell Item="bombs"/>
+                    <ItemCell Item="bow"/>
+                    <ItemCell Item="fire_arrow"/>
+                    <ItemCell Item="dins_fire"/>
+                    <ItemCell Item="slingshot"/>
+                    <ItemCell Item="fairy_ocarina"/>
+                    <ItemCell Item="ocarina_of_time"/>
+                    <ItemCell Item="bombchus"/>
+                    <ItemCell Item="hookshot"/>
+                    <ItemCell Item="ice_arrow"/>
+                    <ItemCell Item="farores_wind"/>
+                    <ItemCell Item="boomerang"/>
+                    <ItemCell Item="lens"/>
+                    <ItemCell Item="magic_beans"/>
+                    <ItemCell Item="hammer"/>
+                    <ItemCell Item="light_arrow"/>
+                    <ItemCell Item="nayrus_love"/>
+                    <ItemCell Item="bottles"/>
+                    <ItemCell Item="ruto_letter"/>
+                </Section>
+
+                <Section Title="Capacity Upgrades">
+                    <ItemCell Item="stick_bag"/>
+                    <ItemCell Item="nut_bag"/>
+                    <ItemCell Item="bomb_bag"/>
+                    <ItemCell Item="quiver"/>
+                    <ItemCell Item="bullet_bag"/>
+                    <ItemCell Item="wallet"/>
+                </Section>
+
+                <Section Title="Equipment">
+                    <ItemCell Item="kokiri_sword"/>
+                    <ItemCell Item="master_sword"/>
+                    <ItemCell Item="biggoron_sword"/>
+                    <ItemCell Item="shield"/>
+                    <ItemCell Item="kokiri_tunic"/>
+                    <ItemCell Item="goron_tunic"/>
+                    <ItemCell Item="zora_tunic"/>
+                    <ItemCell Item="iron_boots"/>
+                    <ItemCell Item="hover_boots"/>
+                </Section>
+
+                <Section Title="Upgrades">
+                    <ItemCell Item="strength"/>
+                    <ItemCell Item="scale"/>
+                    <ItemCell Item="magic"/>
+                    <ItemCell Item="double_defense"/>
+                    <ItemCell Item="echo_gem"/>
+                    <ItemCell Item="gerudo_card"/>
+                    <ItemCell Item="skulltulas"/>
+                    <ItemCell Item="heart_pieces"/>
+                    <ItemCell Item="heart_containers"/>
+                </Section>
+
+                <Section Title="Trade Quests &amp; Masks">
+                    <ItemCell Item="child_trade"/>
+                    <ItemCell Item="goron_mask"/>
+                    <ItemCell Item="zora_mask"/>
+                    <ItemCell Item="gerudo_mask"/>
+                    <ItemCell Item="adult_trade"/>
+                </Section>
+
+                <Section Title="Spiritual Stones &amp; Medallions">
+                    <ItemCell Item="kokiri_emerald"/>
+                    <ItemCell Item="goron_ruby"/>
+                    <ItemCell Item="zora_sapphire"/>
+                    <ItemCell Item="light_medallion"/>
+                    <ItemCell Item="forest_medallion"/>
+                    <ItemCell Item="fire_medallion"/>
+                    <ItemCell Item="water_medallion"/>
+                    <ItemCell Item="spirit_medallion"/>
+                    <ItemCell Item="shadow_medallion"/>
+                </Section>
+
+                <Section Title="Songs">
+                    <ItemCell Item="zeldas_lullaby"/>
+                    <ItemCell Item="eponas_song"/>
+                    <ItemCell Item="sarias_song"/>
+                    <ItemCell Item="suns_song"/>
+                    <ItemCell Item="song_of_time"/>
+                    <ItemCell Item="song_of_storms"/>
+                    <ItemCell Item="scarecrows_song"/>
+                    <ItemCell Item="minuet"/>
+                    <ItemCell Item="bolero"/>
+                    <ItemCell Item="serenade"/>
+                    <ItemCell Item="requiem"/>
+                    <ItemCell Item="nocturne"/>
+                    <ItemCell Item="prelude"/>
+                </Section>
+
+                <VBox Spacing="3">
+                    <Label Text="Dungeon Items" TextSize="12" Color="#E8C872"/>
+                    <Grid Columns="0,0,0,0,0" Rows="0,0,0,0,0,0,0,0,0,0,0,0,0,0" Spacing="3">
+                        <Label Text="" Slot.Row="0" Slot.Column="0"/>
+                        <Label Text="Map" TextSize="10" Slot.Row="0" Slot.Column="1" Slot.HAlign="Center"/>
+                        <Label Text="Comp." TextSize="10" Slot.Row="0" Slot.Column="2" Slot.HAlign="Center"/>
+                        <Label Text="Keys" TextSize="10" Slot.Row="0" Slot.Column="3" Slot.HAlign="Center"/>
+                        <Label Text="Boss" TextSize="10" Slot.Row="0" Slot.Column="4" Slot.HAlign="Center"/>
+
+                        <DungeonName Row="1" Text="Deku Tree"/>
+                        <ItemCell Item="deku_map" Slot.Row="1" Slot.Column="1"/>
+                        <ItemCell Item="deku_compass" Slot.Row="1" Slot.Column="2"/>
+
+                        <DungeonName Row="2" Text="Dodongo's Cavern"/>
+                        <ItemCell Item="dodongo_map" Slot.Row="2" Slot.Column="1"/>
+                        <ItemCell Item="dodongo_compass" Slot.Row="2" Slot.Column="2"/>
+
+                        <DungeonName Row="3" Text="Jabu-Jabu's Belly"/>
+                        <ItemCell Item="jabu_map" Slot.Row="3" Slot.Column="1"/>
+                        <ItemCell Item="jabu_compass" Slot.Row="3" Slot.Column="2"/>
+
+                        <DungeonName Row="4" Text="Forest Temple"/>
+                        <ItemCell Item="forest_map" Slot.Row="4" Slot.Column="1"/>
+                        <ItemCell Item="forest_compass" Slot.Row="4" Slot.Column="2"/>
+                        <ItemCell Item="forest_keys" Slot.Row="4" Slot.Column="3"/>
+                        <ItemCell Item="forest_bk" Slot.Row="4" Slot.Column="4"/>
+
+                        <DungeonName Row="5" Text="Fire Temple"/>
+                        <ItemCell Item="fire_map" Slot.Row="5" Slot.Column="1"/>
+                        <ItemCell Item="fire_compass" Slot.Row="5" Slot.Column="2"/>
+                        <ItemCell Item="fire_keys" Slot.Row="5" Slot.Column="3"/>
+                        <ItemCell Item="fire_bk" Slot.Row="5" Slot.Column="4"/>
+
+                        <DungeonName Row="6" Text="Water Temple"/>
+                        <ItemCell Item="water_map" Slot.Row="6" Slot.Column="1"/>
+                        <ItemCell Item="water_compass" Slot.Row="6" Slot.Column="2"/>
+                        <ItemCell Item="water_keys" Slot.Row="6" Slot.Column="3"/>
+                        <ItemCell Item="water_bk" Slot.Row="6" Slot.Column="4"/>
+
+                        <DungeonName Row="7" Text="Shadow Temple"/>
+                        <ItemCell Item="shadow_map" Slot.Row="7" Slot.Column="1"/>
+                        <ItemCell Item="shadow_compass" Slot.Row="7" Slot.Column="2"/>
+                        <ItemCell Item="shadow_keys" Slot.Row="7" Slot.Column="3"/>
+                        <ItemCell Item="shadow_bk" Slot.Row="7" Slot.Column="4"/>
+
+                        <DungeonName Row="8" Text="Spirit Temple"/>
+                        <ItemCell Item="spirit_map" Slot.Row="8" Slot.Column="1"/>
+                        <ItemCell Item="spirit_compass" Slot.Row="8" Slot.Column="2"/>
+                        <ItemCell Item="spirit_keys" Slot.Row="8" Slot.Column="3"/>
+                        <ItemCell Item="spirit_bk" Slot.Row="8" Slot.Column="4"/>
+
+                        <DungeonName Row="9" Text="Bottom of the Well"/>
+                        <ItemCell Item="well_map" Slot.Row="9" Slot.Column="1"/>
+                        <ItemCell Item="well_compass" Slot.Row="9" Slot.Column="2"/>
+                        <ItemCell Item="well_keys" Slot.Row="9" Slot.Column="3"/>
+
+                        <DungeonName Row="10" Text="Ice Cavern"/>
+                        <ItemCell Item="ice_map" Slot.Row="10" Slot.Column="1"/>
+                        <ItemCell Item="ice_compass" Slot.Row="10" Slot.Column="2"/>
+
+                        <DungeonName Row="11" Text="Thieves' Hideout"/>
+                        <ItemCell Item="hideout_keys" Slot.Row="11" Slot.Column="3"/>
+
+                        <DungeonName Row="12" Text="Gerudo Training Ground"/>
+                        <ItemCell Item="gtg_keys" Slot.Row="12" Slot.Column="3"/>
+
+                        <DungeonName Row="13" Text="Ganon's Castle"/>
+                        <ItemCell Item="ganon_keys" Slot.Row="13" Slot.Column="3"/>
+                        <ItemCell Item="ganon_bk" Slot.Row="13" Slot.Column="4"/>
+                    </Grid>
+                </VBox>
+            </VBox>
+        </ScrollBox>
+
+        <Border Padding="8,3" Background="#151822">
+            <Label Name="status" Text="Left: next / +1   Right: back / -1   Shift: x5" TextSize="11" Color="#9AA3B8"/>
+        </Border>
+    </VBox>
+</Window>

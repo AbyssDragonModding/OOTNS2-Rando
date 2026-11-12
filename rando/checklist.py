@@ -1,6 +1,4 @@
-"""Manual test checklist for a seed: checklist.csv (plain) and checklist.xlsx (formatted).
-
-Both files hold the same grid, laid out for Google Sheets / Excel:
+"""Manual test checklist for a seed: checklist.xlsx, laid out for Google Sheets / Excel:
 
   A-G   Seed info (version, seed, settings string, tester; A-B), setting totals (F-G), then the seed's settings:
         Category | Setting | Value | Expected In-Game | How to Test | Result | Notes
@@ -8,11 +6,9 @@ Both files hold the same grid, laid out for Google Sheets / Excel:
   J-O   Check totals and then every randomized check, grouped by region:
         Region | Location | Vanilla Item | Randomized Item | Result | Notes
 
-Result is "Pass", "Fail" or empty (untested). The .xlsx adds a Pass/Fail dropdown that turns the cell green or
-red; the .csv is the same data without formatting. A sheet exported back to CSV keeps this layout, so a filled-in
-log can be read by the same column positions.
+Result is a dropdown: "Pass" (green), "Partial" (orange), "Fail" (red) or empty (untested). Testers export the
+filled-in sheet as CSV for bug reports; that CSV keeps this layout, so results can be read by column position.
 """
-import csv
 import os
 import re
 
@@ -23,9 +19,10 @@ SET_COLS = ["Category", "Setting", "Value", "Expected In-Game", "How to Test", "
 CHK_COLS = ["Region", "Location", "Vanilla Item", "Randomized Item", "Result", "Notes"]
 GAP = 2                                     # empty columns between the two blocks
 CHK_START = len(SET_COLS) + GAP             # 0-based column index of "Region" (column J)
-INFO_ROWS = 4                               # rows 1-4: seed info, setting totals and check totals
+INFO_ROWS = 5                               # rows 1-5: seed info, setting totals and check totals
 SET_TOTALS = 5                              # setting totals: labels in column F, numbers in G
-HEADER_ROW = INFO_ROWS + 2                  # row 6: column headers (row 5 is empty)
+HEADER_ROW = INFO_ROWS + 2                  # row 7: column headers (row 6 is empty)
+RESULTS = [("Pass", "Passed", "B7E1CD"), ("Partial", "Partial", "F9CB9C"), ("Fail", "Failed", "F4C7C3")]
 
 # setting key -> function(value) -> (expected, how to test) or None when there is nothing to see in-game
 SETTING_TESTS = {
@@ -37,6 +34,17 @@ SETTING_TESTS = {
                             "Go behind King Zora as child without the letter") if v == "open" else None,
     "open_door": lambda v: ("Door of Time starts open (Master Sword may still check story)",
                             "Enter the Temple of Time without stones / Song of Time; try the pedestal") if v == "open" else None,
+    "open_dmt": lambda v: ("Kakariko's Death Mountain gate is open for child Link without Zelda's Letter",
+                           "As child, walk up the Kakariko path to Death Mountain without the letter") if v else
+                          ("The Kakariko gate soldier wants Zelda's Letter", "Show him the letter as child"),
+    "skip_child_zelda": lambda v: ("New save already owns Zelda's, Malon's and Impa's items (see their Check rows); Malon and "
+                                   "Talon are at Lon Lon Ranch; Hyrule Field has day and night; Zelda isn't in the courtyard",
+                                   "Start a new save, check the pause menu, then visit Lon Lon Ranch and Hyrule Castle") if v else None,
+    "shuffle_rewards": lambda v: {
+        "vanilla": None,
+        "reward": ("Bosses give a shuffled Spiritual Stone / Medallion", "Beat a boss; compare with the spoiler"),
+        "anywhere": ("Bosses give random items; stones/medallions are found in other checks; the Door of Time "
+                     "still opens after the three child dungeons", "Beat a boss; open a check holding a stone or medallion")}[v],
     "skip_epona_race": lambda v: ("Adult Epona comes when you play Epona's Song, without Ingo's race",
                                   "As adult with Epona's Song, play it in Hyrule Field") if v else None,
     "saria_song_ocarina": lambda v: ("Saria teaches her song in Sacred Forest Meadow with just an ocarina",
@@ -48,20 +56,23 @@ SETTING_TESTS = {
     "shuffle_ocarinas": lambda v: (("No Saria goodbye / Fairy Ocarina on the forest bridge; ocarinas are found as checks",
                                      "Beat the Deku Tree and cross the forest bridge; check the spoiler for both ocarinas")
                                     if v else None),
+    "shuffle_house": lambda v: ("All five Skulltula House rewards (10-50 tokens) are random; the two wallets are in chests "
+                                "(the first gives the Adult's Wallet, the second the Giant's Wallet)",
+                                "Turn in 10 tokens at the Skulltula House; open a chest holding a wallet") if v else None,
     "tokensanity": lambda v: (("Gold Skulltulas drop randomized items (%s)" % v, "Kill a Gold Skulltula") if v != "off" else None),
     "skip_cutscenes": lambda v: ("Every cutscene can be skipped (opening, credits too)", "Press the skip button in the opening") if v else None,
     "skip_area_intros": lambda v: ("First-arrival intros don't play: Kakariko, Graveyard, Hyrule Castle, Lake Hylia, "
                                    "Gerudo Valley/Fortress, Zora's River/Fountain, Ganon's Castle, Lost Woods (after Saria), "
                                    "Fire Temple / Well / Spirit Temple entrances",
                                    "Arrive in those areas for the first time on a new save") if v else None,
-    "refill_needs_item": lambda v: ("Arrow / bomb / seed chests give a blue rupee without the Bow / Bomb Bag / Slingshot",
+    "refill_needs_item": lambda v: ("Arrow / bomb / Bombchu / seed chests give a blue rupee without the Bow / Bomb Bag / Slingshot",
                                     "Open a refill chest (see Check rows) before owning its item") if v else None,
-    "dungeon_restart_entrance": lambda v: ("Loading a save made inside a dungeon (quest active) puts you at the entrance",
-                                           "Save deep in a dungeon, quit, reload") if v else None,
     "anju_one_cucco": lambda v: ("Anju's minigame finishes after returning 1 cucco", "Kakariko, child: return one cucco to the pen") if v else None,
     "free_bombs": lambda v: ("Bag bombs can be pulled out and thrown without the Goron Bracelet",
                              "Get a Bomb Bag before the bracelet; use a bomb") if v else
                             ("Bombs need the Goron Bracelet (logic gives the bracelet first)", "Check the bracelet is found before bombs are needed"),
+    "small_chests": lambda v: ("Big chests (and Boss Key chests) are small chests and open with the short animation",
+                               "Open a chest that is normally big, e.g. the Deku Tree Slingshot chest") if v else None,
 }
 
 
@@ -162,18 +173,19 @@ def check_rows(world, plan, filler):
 
 
 def _totals(label, count, label_col, result_col):
-    """Rows 1-4 of a block: count, passed, failed, untested. The counts are formulas over the block's Result column."""
+    """Rows 1-5 of a block: count, passed, partial, failed, untested (formulas over the block's Result column)."""
     res = "%s%d:%s%d" % (_col(result_col), HEADER_ROW + 1, _col(result_col), HEADER_ROW + max(count, 1))
     val = _col(label_col + 1)
-    return [[label, count], ["Passed", '=COUNTIF(%s,"Pass")' % res], ["Failed", '=COUNTIF(%s,"Fail")' % res],
-            ["Untested", "=%s1-%s2-%s3" % (val, val, val)]]
+    rows = [[label, count]] + [[name, '=COUNTIF(%s,"%s")' % (res, value)] for value, name, _ in RESULTS]
+    rows.append(["Untested", "=" + "-".join("%s%d" % (val, i + 1) for i in range(len(rows)))])
+    return rows
 
 
 def build_grid(world, plan, filler, version, seed, sstr):
-    """The sheet as a list of rows (lists of cell values), shared by the .csv and .xlsx writers."""
+    """The sheet as a list of rows (lists of cell values)."""
     srows = setting_rows(S.normalize(plan.st))
     crows = check_rows(world, plan, filler)
-    info = [["Version", version], ["Seed", seed], ["Settings String", sstr], ["Emulator / Tester", ""]]
+    info = [["Version", version], ["Seed", seed], ["Settings String", sstr], ["Emulator / Tester", ""], ["", ""]]
     totals = _totals("Checks", len(crows), CHK_START, CHK_START + 4)
     set_totals = _totals("Settings", len(srows), SET_TOTALS, SET_COLS.index("Result"))
     width = CHK_START + len(CHK_COLS)
@@ -207,13 +219,8 @@ def _col(i):
 def write_checklist(world, plan, filler, mod_root, version, seed, sstr):
     os.makedirs(mod_root, exist_ok=True)
     grid, n_set, n_chk = build_grid(world, plan, filler, version, seed, sstr)
-    path = os.path.join(mod_root, "checklist.csv")
-    with open(path, "w", newline="", encoding="utf-8-sig") as fh:   # BOM: Excel reads UTF-8 correctly
-        csv.writer(fh).writerows(grid)
-    try:
-        _write_xlsx(grid, n_set, n_chk, os.path.join(mod_root, "checklist.xlsx"))
-    except ImportError:
-        pass                                                          # openpyxl not installed: csv only
+    path = os.path.join(mod_root, "checklist.xlsx")
+    _write_xlsx(grid, n_set, n_chk, path)      # needs openpyxl (requirements.txt); the caller reports ImportError
     return path
 
 
@@ -242,6 +249,8 @@ def _write_xlsx(grid, n_set, n_chk, path):
 
     for r in range(1, INFO_ROWS + 1):                     # info / totals labels
         for c in ("A", _col(SET_TOTALS), chk[0]):
+            if r == INFO_ROWS and c == "A":
+                continue                                  # the seed info has one row fewer than the totals
             ws["%s%d" % (c, r)].font = bold
             ws["%s%d" % (c, r)].fill = label_fill
     ws["B4"].fill = PatternFill("solid", fgColor="FFF8DC")  # Emulator / Tester: for the tester to fill in
@@ -274,19 +283,21 @@ def _write_xlsx(grid, n_set, n_chk, path):
             ws["%s%d" % (chk[0], r)].font = bold
         prev = region
 
-    green = PatternFill("solid", fgColor="B7E1CD", bgColor="B7E1CD")
-    red = PatternFill("solid", fgColor="F4C7C3", bgColor="F4C7C3")
-    dv = DataValidation(type="list", formula1='"Pass,Fail"', allow_blank=True,
-                        promptTitle="Result", prompt="Pass, Fail, or leave empty if not tested yet")
+    dv = DataValidation(type="list", formula1='"%s"' % ",".join(v for v, _, _ in RESULTS), allow_blank=True,
+                        promptTitle="Result", prompt="Pass, Partial, Fail, or leave empty if not tested yet")
     ws.add_data_validation(dv)
-    for rng in ("F%d:F%d" % (HEADER_ROW + 1, max(set_last, HEADER_ROW + 1)),
-                "%s%d:%s%d" % (chk[4], HEADER_ROW + 1, chk[4], max(chk_last, HEADER_ROW + 1))):
+    centred = Alignment(horizontal="center", vertical="center")
+    for col, last in (("F", set_last), (chk[4], chk_last)):
+        for r in range(HEADER_ROW, last + 1):            # header and dropdown cells centred both ways
+            ws["%s%d" % (col, r)].alignment = centred
+        rng = "%s%d:%s%d" % (col, HEADER_ROW + 1, col, max(last, HEADER_ROW + 1))
         dv.add(rng)
-        ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"Pass"'], fill=green))
-        ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"Fail"'], fill=red))
+        for value, _, color in RESULTS:
+            fill = PatternFill("solid", fgColor=color, bgColor=color)
+            ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"%s"' % value], fill=fill))
 
-    widths = {"A": 26, "B": 34, "C": 22, "D": 46, "E": 46, "F": 11, "G": 36, "H": 3, "I": 3}
-    widths.update(dict(zip(chk, (24, 44, 26, 40, 9, 40))))
+    widths = {"A": 30, "B": 34, "C": 22, "D": 46, "E": 46, "F": 11, "G": 36, "H": 3, "I": 3}
+    widths.update(dict(zip(chk, (24, 44, 26, 40, 11, 40))))
     for c, w in widths.items():
         ws.column_dimensions[c].width = w
     ws.freeze_panes = "A%d" % (HEADER_ROW + 1)

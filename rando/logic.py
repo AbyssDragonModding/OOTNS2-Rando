@@ -17,7 +17,6 @@ PROGRESSION = {
     "Arrow_Fire", "Arrow_Light", "DinFire", "GlassTruth", "Shield_Mirror",
     "Bottle", "Bottle_Milk", "Bottle_Letter", "WeirdEgg", "ZeldaLetter", "Token_Gerudo",
     "Wallet_Medium", "Wallet_Large", "Token_Gold",
-    "Stone_Forest", "Stone_Fire", "Stone_Water", "Medal_Shadow", "Medal_Spirit",
     "Melody_ZeldaLullaby", "Melody_EponaSong", "Melody_SariaSong", "Melody_SunSong",
     "Melody_TimeSong", "Melody_StormSong", "Melody_ForestMinuet", "Melody_FireBolero",
     "Melody_WaterSerenade", "Melody_ShadowNocturne", "Melody_SpiritRequiem", "Melody_LightPrelude",
@@ -71,14 +70,15 @@ def _all(*xs):
 # Generation options the rules depend on (set by the generator before filling).
 OPTIONS = {"free_bombs": True, "open_forest": "closed", "open_zora": "closed", "open_door": "closed",
            "saria_song_ocarina": True, "dodongo_bag_bombs": False,
-           "shuffle_ocarinas": False}
+           "shuffle_ocarinas": False, "open_dmt": False, "skip_child_zelda": False}
 
 
 def set_options(st):
     OPTIONS.update(free_bombs=bool(st["free_bombs"]), open_forest=st["open_forest"], open_zora=st["open_zora"],
                    open_door=st["open_door"], saria_song_ocarina=bool(st["saria_song_ocarina"]),
                    dodongo_bag_bombs=bool(st["dodongo_bag_bombs"]),
-                   shuffle_ocarinas=bool(st["shuffle_ocarinas"]))
+                   shuffle_ocarinas=bool(st["shuffle_ocarinas"]), open_dmt=bool(st["open_dmt"]),
+                   skip_child_zelda=bool(st["skip_child_zelda"]))
 
 
 def bombs(s):
@@ -103,7 +103,10 @@ def ocarina(s):
         return True
     return not OPTIONS["shuffle_ocarinas"] and s.deku_done
 def song(s, k): return s.has("Melody_" + k) and ocarina(s)
-def stones(s): return s.has("Stone_Forest") and s.has("Stone_Fire") and s.has("Stone_Water")
+# The remake never checks which Spiritual Stones / Medallions you hold: the Door of Time quest (Ocarina of Time at
+# the moat, the altar) counts the three child dungeon quests (Get_StoneOf*_IsCompleted_Exp), and the later story
+# follows the sage quests. So the logic follows the dungeons too, which keeps shuffled rewards honest.
+def stones(s): return s.deku_done and s.dodongo_done and s.jabu_done
 def tokens(s, n): return s.has("Token_Gold", n)
 
 
@@ -130,9 +133,9 @@ def epona(s): return s.adult and song(s, "EponaSong")
 @rule
 def hf_child(s): return s.child_out
 @rule
-def zelda_met(s): return s.hf_child and s.has("WeirdEgg")
+def zelda_met(s): return OPTIONS["skip_child_zelda"] or (s.hf_child and s.has("WeirdEgg"))
 @rule
-def dmt_child(s): return s.hf_child and s.has("ZeldaLetter")
+def dmt_child(s): return s.hf_child and (OPTIONS["open_dmt"] or s.has("ZeldaLetter"))   # Kakariko gate
 @rule
 def dmc_child(s): return s.dmt_child and bombs(s)
 @rule
@@ -161,8 +164,9 @@ def colossus_child(s): return song(s, "SpiritRequiem")
 def colossus_adult(s): return s.adult and (s.wasteland or song(s, "SpiritRequiem"))
 @rule
 def goron_tunic(s): return s.adult and (bombs(s) or bow(s) or s.has("Wallet_Medium"))
+def giant_wallet(s): return s.has("Wallet_Large") or s.has("Wallet_Medium", 2)   # 2 progressive wallets
 @rule
-def zora_tunic(s): return s.zd_adult and ((s.zf_adult and bottle(s)) or s.has("Wallet_Large"))
+def zora_tunic(s): return s.zd_adult and ((s.zf_adult and bottle(s)) or giant_wallet(s))
 
 
 # --------------------------------------------------------------------------- dungeons ("done" = whole dungeon)
@@ -196,7 +200,7 @@ def ice_done(s): return s.zf_adult and bottle(s)
 def gtg_done(s): return _all(s.gf_adult, s.card, bow(s), hookshot(s), lens(s), s.has("HeavyBoot"), s.has("Hammer"),
                              str2(s), song(s, "TimeSong"), bombs(s))
 @rule
-def bridge(s): return s.adult and s.has("Medal_Shadow") and s.has("Medal_Spirit")
+def bridge(s): return s.adult and s.shadow_done and s.spirit_done     # the two sage quests (see stones)
 @rule
 def ganon_done(s): return _all(s.bridge, hookshot(s), lens(s), s.has("Hammer"), str3(s), s.has("HoverBoot"),
                                bombs(s), s.has("Arrow_Fire"), s.has("Arrow_Light"), bow(s), bottle(s),
@@ -245,6 +249,7 @@ REGIONS = {
 
 # Locations with their own rule (events and special freestanding items)
 SPECIAL = {
+    # Skip Child Zelda: Impa's song, Zelda's and Malon's items are owned from the start (zelda_met is true)
     "song_impa": lambda s: s.zelda_met,
     "song_malon": lambda s: s.hf_child and ocarina(s),
     # Sacred Forest Meadow (child, needs the sword) with an ocarina; meeting Zelda only without the setting
@@ -267,7 +272,7 @@ SPECIAL = {
     "fairy_hc": lambda s: s.hf_child and bombs(s) and song(s, "ZeldaLullaby"),
     "fairy_zf": lambda s: s.zf_child and bombs(s) and song(s, "ZeldaLullaby"),
     "fairy_colossus": lambda s: s.colossus_child and bombs(s) and song(s, "ZeldaLullaby"),
-    "hc_child": lambda s: s.hf_child,
+    "hc_child": lambda s: OPTIONS["skip_child_zelda"] or s.hf_child,
     "zelda": lambda s: s.zelda_met,
     "darunia": lambda s: s.dmt_child and song(s, "ZeldaLullaby") and song(s, "SariaSong"),
     "zd_child": lambda s: s.zd_child,
@@ -277,9 +282,10 @@ SPECIAL = {
     "kak_gallery": lambda s: s.adult and bow(s),
     "bowling": lambda s: s.hf_child and bombs(s),
     "gerudo_card": lambda s: s.gf_adult and hookshot(s),
-    "light_arrows": lambda s: s.adult and s.has("Medal_Shadow") and s.has("Medal_Spirit"),
+    "light_arrows": lambda s: s.adult and s.shadow_done and s.spirit_done,
     "kak_child": lambda s: s.hf_child,
     "llr_child": lambda s: s.hf_child,
+    "big_poes": lambda s: s.epona and bow(s) and bottle(s),     # ten Big Poes in Hyrule Field, on horseback
     "fishing_child": lambda s: s.hf_child,
     "fishing_adult": lambda s: s.adult,
     "lab_dive": lambda s: s.hf_child and s.has("Scale_Gold"),

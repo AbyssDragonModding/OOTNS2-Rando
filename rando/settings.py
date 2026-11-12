@@ -20,27 +20,41 @@ SETTINGS = [
      "Open: both blockers are gone. Switches off the two blocker flags in the default save data."),
     ("open_zora", "Main Rules", "Open", "Zora's Fountain", "choice",
      [("closed", "Closed"), ("open", "Open")], "closed",
-     "Open: King Zora has already moved aside (Ruto's letter scene counts as seen), so the Fountain\n"
+     "Open: King Zora has already moved aside (the Zora quest starts past Ruto's letter), so the Fountain\n"
      "and Jabu-Jabu can be reached without the letter. Ruto's Letter would be a dead item then, so it\n"
      "is replaced by an empty Bottle (wherever it lands, or at Lake Hylia if freestanding items aren't shuffled)."),
     ("open_door", "Main Rules", "Open", "Door of Time (experimental)", "choice",
      [("closed", "Closed"), ("open", "Open")], "closed",
      "Open: the Door of Time starts open, so the Master Sword can be reached without the stones and\n"
      "the Song of Time. Untested: the pedestal scene may still check story progress."),
+    ("open_dmt", "Main Rules", "Open", "Open Death Mountain", "bool", None, False,
+     "The soldier at Kakariko's Death Mountain gate has already been shown Zelda's Letter, so the gate\n"
+     "starts open for child Link. Sets the gate's own story flag (Npc_Hylia_Soldier_003_GateOpen), the one\n"
+     "the soldier sets when you show him the letter; that flag also opens the Happy Mask Shop. Zelda's\n"
+     "Letter is then only needed for the soldier's mask-shop trade."),
+    ("skip_child_zelda", "Main Rules", "Open", "Skip Child Zelda (experimental)", "bool", None, False,
+     "A new save starts as if you had already been through Hyrule Castle as a child: you already own\n"
+     "whatever Zelda (HC Zelda's Letter), Malon (HC Malon Egg) and Impa (Song from Impa) would have given\n"
+     "you. The castle quest counts as complete, so Talon and Malon are back at Lon Lon Ranch and Hyrule\n"
+     "Field uses its normal day/night cycle from the start. Those three checks only hold items the save\n"
+     "can grant directly (songs and single key items). Untested in-game."),
     ("skip_epona_race", "Main Rules", "Open", "Skip Epona Race", "bool", None, False,
      "Adult Epona is available as soon as you own Epona's Song: the 'Epona obtained' story flag is\n"
      "rewritten to 'has Epona's Song', so Ingo's race isn't needed. Untested in-game."),
     ("saria_song_ocarina", "Main Rules", "Open", "Saria's Song With Just an Ocarina", "bool", None, True,
      "Saria gives her song in Sacred Forest Meadow as soon as you own an ocarina; meeting Zelda\n"
-     "isn't needed. Works with any Kokiri Forest setting. Untested in-game."),
+     "isn't needed. Works with any Kokiri Forest setting."),
     ("shuffle_songs", "Main Rules", "Shuffle", "Shuffle Songs", "choice",
      [("vanilla", "Vanilla"), ("song", "Song Locations"), ("anywhere", "Anywhere (experimental)")], "song",
      "Song Locations: songs are shuffled among the 12 song-teaching events.\n"
      "Anywhere: songs can also be found in chests and NPC rewards (untested in the remake)."),
-    ("shuffle_rewards", "Main Rules", "Shuffle", "Shuffle Dungeon Rewards", "choice",
-     [("vanilla", "Vanilla"), ("reward", "Dungeon Reward Locations")], "vanilla",
-     "Shuffle the Spiritual Stones and Medallions among the boss reward events.\n"
-     "The sage cutscenes still play for the original dungeon."),
+    ("shuffle_rewards", "Main Rules", "Shuffle", "Shuffle Spiritual Stones/Medallions (experimental)", "choice",
+     [("vanilla", "Vanilla"), ("reward", "Dungeon Reward Locations"), ("anywhere", "Anywhere")], "vanilla",
+     "Dungeon Reward Locations: the Spiritual Stones and Medallions are shuffled among the boss rewards.\n"
+     "Anywhere: finishing a dungeon gives a random item, and the stones and medallions can be anywhere.\n"
+     "The remake's story checks which dungeons you have beaten, not which stones/medallions you hold, so\n"
+     "the Door of Time, the Light Arrows and Ganon's bridge follow the dungeons; the logic does the same.\n"
+     "The sage cutscenes still play for the original dungeon. Untested in-game."),
     ("shuffle_kokiri_sword", "Main Rules", "Shuffle", "Shuffle Kokiri Sword", "bool", None, True,
      "The Kokiri Sword chest joins the item pool. Off keeps the sword in its vanilla chest."),
     ("shuffle_freestanding", "Main Rules", "Shuffle", "Shuffle Freestanding Items", "bool", None, True,
@@ -55,7 +69,7 @@ SETTINGS = [
      "Saria's goodbye on the forest bridge (where she hands over the Fairy Ocarina) is switched off, so\n"
      "you have to find an ocarina. Zelda's Ocarina of Time at the castle moat becomes a check; logic\n"
      "expects you to already own an ocarina there, since she teaches the Song of Time right after.\n"
-     "Either ocarina plays every song. Untested in-game."),
+     "Either ocarina plays every song. Partly tested in-game."),
     ("shuffle_rupees", "Main Rules", "Shuffle", "Shuffle Freestanding Rupees", "bool", None, False,
      "The 112 green, blue, red and purple rupees lying around the world (Kokiri Forest, Hyrule Field,\n"
      "Zora's River/Domain/Fountain, Death Mountain, Graveyard, Deku Tree scrub drops) become checks.\n"
@@ -68,8 +82,9 @@ SETTINGS = [
     ("shuffle_fairies", "Main Rules", "Shuffle", "Shuffle Great Fairy Rewards", "bool", None, True,
      "Din's Fire, Farore's Wind, Nayru's Love and the three Great Fairy blessings."),
     ("shuffle_house", "Main Rules", "Shuffle", "Shuffle Skulltula House Rewards", "bool", None, True,
-     "Rewards for 10/20/30/40/50 Gold Skulltula Tokens."),
-    ("tokensanity", "Main Rules", "Shuffle", "Tokensanity (experimental)", "choice",
+     "Rewards for 10/20/30/40/50 Gold Skulltula Tokens. The two wallets become progressive wallets\n"
+     "found in chests (the first gives the Adult's Wallet, the second the Giant's Wallet)."),
+    ("tokensanity", "Main Rules", "Shuffle", "Tokensanity", "choice",
      [("off", "Off"), ("dungeons", "Dungeons Only"), ("overworld", "Overworld Only"), ("all", "All Tokens")], "off",
      "Gold Skulltulas drop a shuffled item instead of a token. Uses the enemy's drop parameter.\n"
      "Killing a Skulltula is permanent, so pick its item up before leaving the room."),
@@ -112,20 +127,15 @@ SETTINGS = [
      "Fire Temple / Bottom of the Well / Spirit Temple entrances. Intros that also advance a quest\n"
      "(Deku Tree, Death Mountain, Zora's Domain, Colossus, Castle Town, Crater, Ice Cavern, Shadow Temple,\n"
      "Training Ground, Kokiri Forest, Goron City, Hyrule Field) still play; use the skip button for those."),
-    ("dodongo_bag_bombs", "Other", "Quality of Life", "Bag Bombs Open Dodongo's Cavern (experimental)", "bool", None, False,
+    ("dodongo_bag_bombs", "Other", "Quality of Life", "Bag Bombs Open Dodongo's Cavern", "bool", None, False,
      "Normally the boulder in front of Dodongo's Cavern only breaks from the special bomb flower next to it\n"
      "(needs the Goron Bracelet). This lets a Bomb Bag bomb near the boulder break it too, by rewiring the\n"
-     "boulder's trigger logic. Off: the logic requires the Goron Bracelet to open the cavern. Untested."),
+     "boulder's trigger logic. Off: the logic requires the Goron Bracelet to open the cavern."),
     ("refill_needs_item", "Other", "Quality of Life", "Refills Need Their Item", "bool", None, True,
-     "A chest with arrows, bombs or Deku seeds gives a blue rupee instead if you don't have the Bow,\n"
-     "a Bomb Bag or the Slingshot (the game's own conditional-chest check). Other checks can't test\n"
-     "for the item, so refills placed there become blue rupees."),
-    ("dungeon_restart_entrance", "Other", "Quality of Life", "Load Saves at Dungeon Entrance (experimental)",
-     "bool", None, False,
-     "Like the original: loading a save made inside a dungeon puts you at its entrance. Uses the game's\n"
-     "boss-room 'no escape' areas, stretched over the whole dungeon with a new restart point at the\n"
-     "entrance, so it only works while that dungeon's quest is active, and dying in the boss room also\n"
-     "returns you to the entrance. Not available for the Ice Cavern and Training Ground. Untested."),
+     "A chest with arrows, bombs, Bombchus or Deku seeds gives a blue rupee instead if you don't have\n"
+     "the Bow, a Bomb Bag (Bombchus are held in the Bomb Bag in the remake) or the Slingshot (the game's\n"
+     "own conditional-chest check). Other checks can't test for the item, so refills placed there\n"
+     "become blue rupees."),
     ("anju_one_cucco", "Other", "Quality of Life", "Anju Needs Only 1 Cucco", "bool", None, True,
      "Return a single cucco to Anju's pen to finish her minigame and get the reward.\n"
      "Changes the fence-count check in the minigame logic and Anju's 'cuccos left' counter."),
@@ -134,6 +144,10 @@ SETTINGS = [
      "Vanilla always gives the bracelet first; a randomizer may not. This lowers the bag bomb's lift\n"
      "requirement so bombs work as soon as you have a Bomb Bag. Bomb Flowers still need the bracelet.\n"
      "Turned off, the logic requires the Goron Bracelet for bombs instead."),
+    ("small_chests", "Other", "Quality of Life", "Small Chests Only (experimental)", "bool", None, False,
+     "Every big chest (including Boss Key chests) uses the small chest instead, so opening one\n"
+     "skips the long big-chest animation. Only the chest's actor changes: its item, flags and\n"
+     "position stay the same. The chest size no longer hints at what's inside."),
     ("excluded_locations", "Other", "Excluded", "Excluded Locations", "list", None, [],
      "Locations that never hold progression or dungeon items (only rupees, ammo, hearts)."),
     ("create_spoiler", "Other", "Output", "Create Spoiler Log", "bool", None, True,
@@ -167,11 +181,11 @@ UNSUPPORTED = [
      "Skippable'), and the side-effect-free area intros can be skipped automatically."),
     ("Kakariko Gate / Gerudo Fortress (open)", "Their story flags are not mapped yet."),
     ("Rainbow Bridge / Ganon's Boss Key / Trials requirements", "The remake's bridge and trial checks are not mapped yet."),
-    ("Starting inventory / starting age / skip child Zelda", "Needs save-data or GameData edits."),
+    ("Starting inventory / starting age", "Needs save-data or GameData edits."),
     ("Shopsanity in the bazaars and potion shops / Cow Shuffle / Beans",
      "Bazaar and potion shelves are shared between several shops; cows use one shared event."),
     ("Gerudo Card individual toggle", "Part of 'Shuffle NPC & Minigame Rewards'."),
-    ("Capacity upgrades (wallets, bomb bag / quiver / seed bag sizes)",
+    ("Other capacity upgrades (bomb bag / quiver / seed bag sizes)",
      "Stay vanilla: nothing in the logic requires the smaller size first, so a bigger one found "
      "early could be downgraded by the smaller one later."),
     ("Entrance Randomizer", "Not supported."),

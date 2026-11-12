@@ -125,6 +125,8 @@ EVENT_LOCATIONS = [
     dict(name="ToT Light Arrows Cutscene", flow="Dm_TimeTemple_0130", vanilla="Item_Arrow_Light", category="npc", rule="light_arrows"),
     dict(name="Kak Anju as Child", flow="Minigame_CatchCucco", vanilla="Item_Bottle", category="npc", rule="kak_child"),
     dict(name="LLR Talons Chickens", flow="Minigame_FindOutCucco", vanilla="Item_Bottle_Milk", category="npc", rule="llr_child"),
+    # the ghost shop in the adult Market: selling Big Poes up to 1000 points gives a bottle (later sales: rupees)
+    dict(name="Market Big Poe Bottle", flow="Npc_Hylia_048_BottleShop", vanilla="Item_Bottle", category="npc", rule="big_poes"),
     dict(name="LH Child Fishing", flow="MiniGame_Fishing", vanilla="Obj_Heart_Piece", category="npc", rule="fishing_child"),
     dict(name="LH Adult Fishing", flow="MiniGame_Fishing", vanilla="Item_Scale_Gold", category="npc", rule="fishing_adult"),
     dict(name="LH Lab Dive", flow="Npc_Hylia_045_Child", vanilla="Obj_Heart_Piece", category="npc", rule="lab_dive"),
@@ -138,9 +140,12 @@ EVENT_LOCATIONS = [
     dict(name="Market Lost Dog", flow="SubEvent_FindRichard", vanilla="Obj_Heart_Piece", category="npc", rule="market_child"),
     dict(name="GF Horseback Archery", flow="Minigame_HorsebackArchery", vanilla="Obj_Heart_Piece", category="npc", rule="hba"),
     # skulltula house
-    dict(name="Kak 10 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Item_Wallet_Medium", category="house", rule="tokens10"),
+    # the wallets are shuffled as two progressive chest wallets (generator.PROGRESSIVE_WALLET)
+    dict(name="Kak 10 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Item_Wallet_Medium", category="house", rule="tokens10",
+         upgrade_ok=True),
     dict(name="Kak 20 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Item_AgonyStone", category="house", rule="tokens20"),
-    dict(name="Kak 30 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Item_Wallet_Large", category="house", rule="tokens30"),
+    dict(name="Kak 30 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Item_Wallet_Large", category="house", rule="tokens30",
+         upgrade_ok=True),
     dict(name="Kak 40 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Item_BombchuBundle_Large", category="house", rule="tokens40"),
     dict(name="Kak 50 Gold Skulltula Reward", flow="GatheringTokenGold", vanilla="Obj_Heart_Piece", category="house", rule="tokens50"),
 ]
