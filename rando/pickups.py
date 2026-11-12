@@ -28,6 +28,16 @@ ROW_FROM_ITEM = ("FmdbName", "ModelProjectName", "AnimationResources", "ModelAab
                  "ELinkUserName", "SLinkUserName")
 HEAP_KEYS = ("InstanceHeapSize", "PreActorRenderInfoHeapSize")
 
+# Songs have no model of their own: Item_Melody_* points at the rupee model as a placeholder (the song-get
+# scene never shows it), so a song lying in the world looked like a green rupee. Song pickups borrow Sheik's
+# harp (Dm_Item_Sheik_Harp, the model her song scenes use) instead. The name and get text stay the song's.
+MODEL_OVERRIDES = {"Item_Melody_": "Dm_Item_Sheik_Harp"}
+MODEL_ROW_KEYS = ("FmdbName", "ModelProjectName", "ModelAabbMax", "ModelAabbMin")
+
+
+def _model_source(src):
+    return next((m for prefix, m in MODEL_OVERRIDES.items() if src.startswith(prefix)), src)
+
 # Walk-over pickups. Obj_Item_Base (rupees, small keys, the Ocarina of Time, ...) is collected by touching it
 # (AttentionSenderParam "AutoPickUpItem"); Obj_Arrow_Fire, and so every Obj_Rando_ clone, overrides that with
 # "PickUpItem", which needs A. Every shuffled item lying in the world (freestanding and rupee spots, Gold
@@ -67,6 +77,7 @@ class PickupCloner:
         self.world, self.read, self.emit, self.restbl, self.progress = world, read, emit, restbl, progress
         self.made = {}          # (source actor, False) -> clone name (or None if it could not be built)
         self.rows = []          # (clone, source) for RSDB
+        self.model_src = {}     # clone -> actor whose model it borrows (songs)
         self.auto_rows = []     # (walk-over copy, pickup it copies) for RSDB
 
     @staticmethod
@@ -157,6 +168,17 @@ class PickupCloner:
         for key in COPIED_REFS:
             if key in src_comps:
                 comps[key] = src_comps[key]
+        model_files = {}
+        model_src = _model_source(src)
+        if model_src != src:
+            m_files = F.sarc_files(self.read(_pack(model_src))[0])
+            m_comps = F.byml_load(m_files[_param(model_src)]).get("Components", {})
+            ref = m_comps.get("ModelInfoRef")
+            if ref and _ref_file(ref) in m_files:
+                comps["ModelInfoRef"] = ref
+                model_files[_ref_file(ref)] = m_files[_ref_file(ref)]
+            else:
+                model_src = src
 
         # pouch content: inherit the item's own settings, but give the item itself
         pouch_tmpl_path = _ref_file(comps["PouchContentRef"])
@@ -175,6 +197,7 @@ class PickupCloner:
         comps["PouchContentRef"] = "?" + pouch_path
 
         add = {k: v for k, v in item.items() if k not in tmpl and not k.startswith(("Actor/", "AI/"))}
+        add.update({k: v for k, v in model_files.items() if k not in tmpl})
         new_param = F.byml_dump(param, version=F.BymlReader(tmpl[_param(TEMPLATE)]).ver)
         new_pouch = F.byml_dump(pouch, version=F.BymlReader(tmpl[pouch_tmpl_path]).ver)
         add[_param(clone)] = new_param
@@ -199,6 +222,8 @@ class PickupCloner:
                     continue
                 self.restbl.set(path, size)
         self.rows.append((clone, src))
+        if model_src != src:
+            self.model_src[clone] = model_src
         return clone
 
     def finish(self):
@@ -230,6 +255,11 @@ class PickupCloner:
                         for k in ROW_FROM_ITEM:
                             if k in s:
                                 row[k] = copy.deepcopy(s[k])
+                        m = by_id.get(self.model_src.get(clone, src), {})
+                        if m is not s:          # borrowed model (songs): its model fields, the item's name
+                            for k in MODEL_ROW_KEYS:
+                                if k in m:
+                                    row[k] = copy.deepcopy(m[k])
                         row["ActorName"] = s.get("ActorName", src)
                         for k in HEAP_KEYS:
                             if k in s:

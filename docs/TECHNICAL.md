@@ -384,6 +384,12 @@ actor, `Obj_Rando_<item>` (`rando/pickups.py`):
 
 The spot's own save flag, its actor hash, still records the pickup.
 
+**Song pickups (0.4.5).** `Item_Melody_*` has no model: its ModelInfo and ActorInfo row point at
+`Obj_Rupee` as a placeholder, because the song-get scene never shows it. So a song clone looked like a
+green rupee. Song clones take `ModelInfoRef` and the `ActorInfo` model fields (`FmdbName`,
+`ModelProjectName`, AABB) from `Dm_Item_Sheik_Harp`, the harp model from Sheik's song scenes. The
+`ActorName`, pouch content and get text stay the song's (`pickups.MODEL_OVERRIDES`).
+
 **Walk-over pickup (0.4.4).** Whether a pickup needs A is set by its `AttentionSenderRef`. `Obj_Item_Base`
 uses `AutoPickUpItem`: touching the item collects it, like a rupee. `Obj_Arrow_Fire`, and so every
 `Obj_Rando_` clone, overrides it with `PickUpItem`, which needs A. That made an item dropped by a Gold

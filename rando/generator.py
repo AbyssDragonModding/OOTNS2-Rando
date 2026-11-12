@@ -17,7 +17,7 @@ from .qol import (patch_anju, patch_dodongo_bag_bombs, patch_egg_hatch_guard, pa
 from .shops import ShopPatcher
 from .world import World, JUNK
 
-VERSION = "0.4.4"
+VERSION = "0.4.5"
 BOMB_LIFT_PARAM = "Component/LiftableParam/Item_Bomb.game__component__LiftableParam.bgyml"
 BOMB_PACKS = ["Pack/Actor/Item_Bomb.pack.zs", "Pack/Actor/Npc_Hylia_ImperialSoldier_Bomb.pack.zs",
               "Pack/Actor/Obj_BombFlower_A_01.pack.zs", "Pack/Actor/Obj_BombFlower_A_04.pack.zs",

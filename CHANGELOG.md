@@ -4,6 +4,14 @@ All notable changes to the randomizer. Versions are `Major.Minor.Patch`: a new s
 minor version, a fix raises the patch version. The same seed and settings string make a different mod in a
 different version.
 
+## 0.4.5 - 2026-11-12
+
+### Fixed
+- **Shuffle Songs: Anywhere**: a song lying in the world (freestanding, rupee or boss Heart Container spot,
+  or dropped by a Gold Skulltula) looked like a green rupee, because songs have no model of their own in the
+  remake. Song pickups now show Sheik's harp and keep the song's name. Like every shuffled world item since
+  0.4.4, they're collected by walking into them. Not yet tested in-game.
+
 ## 0.4.4 - 2026-11-12
 
 ### Fixed
