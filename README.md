@@ -1,5 +1,5 @@
 # OoT Remake Randomizer
-
+## Current Version: 0.4.4 (PUBLIC BETA RELEASE)
 An item randomizer for the Switch 2 remake of *The Legend of Zelda: Ocarina of Time*. It shuffles chests,
 songs, dungeon rewards, NPC rewards, shop items, Gold Skulltulas and more, and checks that every seed can be
 beaten. The settings follow the classic [OoT Randomizer](https://ootrandomizer.com), adjusted to what the
@@ -17,7 +17,7 @@ only the files it changes into a new mod folder. Share seeds and settings string
 > Your test reports are what makes it better; see [Testing and reporting problems](#testing-and-reporting-problems).
 
 
-[Disclamer] Yes claude was used with the production of this. It accelerates that type of stuff much faster. I know how to program, but something like this would take days or weeks instead of a few hours
+[Disclamer] Yes claude was used with the production of this. It accelerates development a ton. Most settings are manually tested in game manually
 =======
 
 ## Contents
