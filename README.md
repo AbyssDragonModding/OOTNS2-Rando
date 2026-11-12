@@ -5,7 +5,7 @@ songs, dungeon rewards, NPC rewards, shop items, Gold Skulltulas and more, and c
 beaten. The settings follow the classic [OoT Randomizer](https://ootrandomizer.com), adjusted to what the
 remake allows.
 
-**No game files are included.** The randomizer reads your own extracted game files (the `romfs`) and writes
+**No game files are included.** The randomizer reads your own extracted game files (the `romfs` and `exefs`) and writes
 only the files it changes into a new mod folder. Share seeds and settings strings, never mod folders.
 
 ><span style="display: flex; justify-content: center; color: red;">[WARNING]</span>
