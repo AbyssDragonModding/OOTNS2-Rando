@@ -290,3 +290,120 @@ def patch_anju(world, emit, progress, read, cuccos=1):
                     n += 1
         if n:
             emit(rel, data, ev.data(), dname)
+
+
+# --- Small Chests Only: big chests become small ones, with the small chest's short opening ------------------
+# Obj_TBox_A_02 (big) and A_03 (Boss Key) are built on A_01 (their packs carry Obj_TBox_A_01's ActorParam), so
+# the stage actor's Gyaml can simply change. Which opening plays is the chest's GetEventName blackboard string:
+# Dm_SY_TreasureboxSmall for A_01, Dm_SY_Treasurebox (the long one) for A_02. About 30 big chests override it
+# per placement (Dynamic.GetEventName, a row of RSDB/EventSetting) with a script that ends in a jump to
+# Dm_SY_Treasurebox, so in 0.4.0 they kept the long opening. Pointing those jumps at Dm_SY_TreasureboxSmall
+# (0.4.1) left the chests unopenable. Now:
+#  - scripts that only add a Navi line or a camera move before the big opening are dropped from the chest, so it
+#    opens like any small chest (the same as the randomized Kokiri Sword chest, see generator.ITEM_GET_EVENTS);
+#  - chests whose script runs story events stay vanilla big chests.
+SMALL_CHEST = {"Obj_TBox_A_02": "Obj_TBox_A_01", "Obj_TBox_A_03": "Obj_TBox_A_01",
+               "Obj_TBox_A_02_NoBake": "Obj_TBox_A_01_NoBake", "Obj_TBox_A_03_NoBake": "Obj_TBox_A_01_NoBake"}
+# Story scripts: quest steps, cutscenes, Ruto, a minigame's state.
+BIG_CHEST_STORY_EVENTS = {
+    "SageOfSpirit_NaboorIsTakenAway",           # Nabooru is taken (Spirit quest Step07, Dm_DesertColossus_0030)
+    "SageOfWater_MelodyGet_Water",              # Sheik teaches the Serenade (Water quest Step04/05)
+    "InsideJabuJabuBelly_TreasureBoxWithRuto09", "InsideJabuJabuBelly_TreasureBoxWithRuto12",   # Ruto
+    "MiniGame_DampeRace_OpenGoalTBox",          # Dampe race goal chest state
+    "InsideGanonCastle_Get_Gauntlet_Gold",      # Dm_InsideGanonCastle_0006
+    "SubEvent_GetIceArrow_OpenTBox",            # completes the Ice Arrow side quest
+    "Get_StoneOfForest_GetSword",               # Kokiri Sword scene (dropped already when that chest is randomized)
+}
+
+
+def patch_small_chests(world, emit, progress, read):
+    swapped = dropped = kept = 0
+    banc = os.path.join(world.romfs, "Banc")
+    keys = [k.encode() for k in SMALL_CHEST]
+    for dp, _, fns in sorted(os.walk(banc)):
+        for fn in sorted(fns):
+            if not fn.endswith(".bcett.byml.zs"):
+                continue
+            rel = os.path.relpath(os.path.join(dp, fn), world.romfs).replace(os.sep, "/")
+            orig, dname = read(rel)
+            if not any(k in orig for k in keys):
+                continue
+            root = F.byml_load(orig)
+            hit = 0
+            for a in root.get("Actors", []):
+                small = SMALL_CHEST.get(a.get("Gyaml"))
+                if not small or not world.actor_exists(small):
+                    continue
+                dyn = a.get("Dynamic") or {}
+                script = dyn.get("GetEventName")
+                if script in BIG_CHEST_STORY_EVENTS:
+                    kept += 1
+                    continue
+                if script:
+                    del dyn["GetEventName"]
+                    dropped += 1
+                a["Gyaml"] = small
+                hit += 1
+            if hit:
+                swapped += hit
+                emit(rel, orig, F.byml_dump(root), dname)
+    progress("Small chests: %d big chest placements now small (%d Navi/camera scripts dropped); "
+             "%d story chests kept big" % (swapped, dropped, kept))
+    return swapped, dropped, kept
+
+
+# --- Skip Child Zelda: the Kokiri stay where they are before the Hyrule Castle trip ---------------------------
+# Every child Kokiri's AI schedule (Component/AIScheduleParam/Npc_Kokiri_*_Child) ends with a condition on
+# Goto_HyruleCastle_IsCompleted_Exp: their spots after you've met Zelda. Skip Child Zelda completes that quest
+# on a new save, so Mido walked off his post while his invisible wall (KokiriForest_Npc_Kokiri_Mido_Child_Blocker,
+# cleared only by his own sword-and-shield talk) stayed: the Deku Tree couldn't be reached (0.4.0 report).
+# Dropping that condition keeps the Kokiri on their Deku Tree quest schedules.
+KOKIRI_SCHEDULES = "Component/AIScheduleParam"
+CASTLE_DONE_EXP = "Goto_HyruleCastle_IsCompleted_Exp"
+
+
+def patch_kokiri_schedules(world, emit, progress, read):
+    folder = os.path.join(world.romfs, *KOKIRI_SCHEDULES.split("/"))
+    n = 0
+    for fn in sorted(os.listdir(folder)):
+        if not (fn.startswith("Npc_Kokiri_") and "_Child." in fn):
+            continue
+        rel = KOKIRI_SCHEDULES + "/" + fn
+        orig = read(rel)[0]
+        root = F.byml_load(orig)
+        conds = root.get("ConditionalSchedule") or []
+        keep = [c for c in conds if c.get("ConditionFlag") != CASTLE_DONE_EXP]
+        if len(keep) != len(conds):
+            root["ConditionalSchedule"] = keep
+            emit(rel, orig, F.byml_dump(root), None, compressed=False)
+            n += 1
+    if not any(fn.startswith("Npc_Kokiri_Mido_Child") for fn in os.listdir(folder)):
+        progress("warning: Mido's schedule not found; he may leave his post with Skip Child Zelda")
+    progress("Skip Child Zelda: %d Kokiri schedules keep their before-the-castle spots" % n)
+    return n
+
+
+# --- Big Poe buyer needs only 1 Big Poe ---------------------------------------------------------------------
+# Npc_Hylia_048_BottleShop (the adult Market ghost shop) gives 100 points per Big Poe. Before each sale it compares
+# GhostShop_CouponNum with 900 (EventQueryIsGameDataInt): below it's a normal sale, at 900 or more it's the final
+# sale (Sell_AfterCheckingLoseMoney_900), which completes SubEvent_GhostShop and gives his reward. Comparing with 0
+# makes the first sale the final one. After the quest is complete the shop no longer reaches this check.
+GHOST_SHOP_FLOW = "Event/EventFlow/Npc_Hylia_048_BottleShop.bfevfl.zs"
+GHOST_SHOP_POINTS = "GhostShop_CouponNum"
+
+
+def patch_big_poe_one(world, emit, progress, read):
+    data, dname = read(GHOST_SHOP_FLOW)
+    ev = F.EvflFile(data)
+    hits = [e for fc in ev.flowcharts for e in fc["events"]
+            if e.get("query") == "EventQueryIsGameDataInt" and isinstance(e.get("params"), dict)
+            and e["params"].get("GameDataName") == GHOST_SHOP_POINTS and e["params"].get("Value") == 900
+            and "#int:Value" in e["ptrs"]]
+    if len(hits) != 1:
+        progress("warning: Big Poe buyer's 900-point check not found (%d matches); he still wants ten" % len(hits))
+        return False
+    ev.set_int_param(hits[0]["ptrs"]["#int:Value"], 0)
+    F.EvflFile(ev.data())                                   # sanity: must still parse
+    emit(GHOST_SHOP_FLOW, data, ev.data(), dname)
+    progress("Big Poe buyer: one Big Poe is enough")
+    return True

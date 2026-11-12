@@ -124,7 +124,13 @@ EVENT_LOCATIONS = [
     dict(name="Hideout Gerudo Membership Card", flow="Dm_Gerudo_0025", vanilla="Item_Token_Gerudo", category="npc", rule="gerudo_card"),
     dict(name="ToT Light Arrows Cutscene", flow="Dm_TimeTemple_0130", vanilla="Item_Arrow_Light", category="npc", rule="light_arrows"),
     dict(name="Kak Anju as Child", flow="Minigame_CatchCucco", vanilla="Item_Bottle", category="npc", rule="kak_child"),
-    dict(name="LLR Talons Chickens", flow="Minigame_FindOutCucco", vanilla="Item_Bottle_Milk", category="npc", rule="llr_child"),
+    # Talon's first win only ("marry Malon?" branch, NpcCommon_HandOver_NpcToPlayer_NoDisplay). The flow's other two
+    # milk nodes are buying milk (30 rupees, GetInEventInBottle) and refilling a bottle on later wins (..._EmptyBottle):
+    # randomized, they handed out the random item again and again.
+    dict(name="LLR Talons Chickens", flow="Minigame_FindOutCucco", vanilla="Item_Bottle_Milk",
+         via="HandOver_NpcToPlayer_NoDisplay", category="npc", rule="llr_child"),
+    # end of the adult trade sequence (the trade items themselves stay vanilla): Biggoron's claim-check reward
+    dict(name="DMT Biggoron", flow="Npc_Goron_Biggoron_Adult", vanilla="Item_Sword_Biggoron", category="npc", rule="biggoron"),
     # the ghost shop in the adult Market: selling Big Poes up to 1000 points gives a bottle (later sales: rupees)
     dict(name="Market Big Poe Bottle", flow="Npc_Hylia_048_BottleShop", vanilla="Item_Bottle", category="npc", rule="big_poes"),
     dict(name="LH Child Fishing", flow="MiniGame_Fishing", vanilla="Obj_Heart_Piece", category="npc", rule="fishing_child"),
@@ -169,6 +175,10 @@ STAGE_KINDS = [
     (r"^Enemy_Skulltula_Gold$", "gs", "Gold Skulltula"),
 ]
 
+# The three Deku Tree scrub-drop rupees (ScrubDekuRupee_*) appear inside the beaten scrub's flower
+# (Presence Enemy_Scrub_Deku_ItemDrop_0N). A rupee there can be collected, but an item in that spot sits behind
+# the flower's collision and can't be picked up (0.4.2 report), so they stay vanilla.
+SCRUB_DROP_FLAG = "Enemy_Scrub_Deku_ItemDrop"
 SPECIAL_RULES = {"Obj_Arrow_Fire": "fire_arrows", "Obj_Bottle_Letter": "rutos_letter"}
 
 # Shopsanity: shelf types that are only ever placed in one shop, so re-targeting the shelf's
@@ -287,6 +297,8 @@ class World:
                         if re.search(pat, g):
                             break
                     else:
+                        continue
+                    if kind == "rupee" and (a.get("Presence") or {}).get("FlagName", "").startswith(SCRUB_DROP_FLAG):
                         continue
                     if kind == "chest":
                         vanilla = dyn.get("Drop__DropActor") or "Obj_Rupee_Green"

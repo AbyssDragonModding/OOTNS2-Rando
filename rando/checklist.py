@@ -67,6 +67,10 @@ SETTING_TESTS = {
                                    "Arrive in those areas for the first time on a new save") if v else None,
     "refill_needs_item": lambda v: ("Arrow / bomb / Bombchu / seed chests give a blue rupee without the Bow / Bomb Bag / Slingshot",
                                     "Open a refill chest (see Check rows) before owning its item") if v else None,
+    "big_poe_one": lambda v: ("The Big Poe buyer gives his reward for a single Big Poe",
+                              "Adult: catch one Big Poe in Hyrule Field, sell it in the Market ghost shop") if v else None,
+    "skip_kaepora": lambda v: ("Kaepora doesn't stop you outside Kokiri Forest, in Hyrule Field or at Zora's River; "
+                               "the quest menu still works", "Leave Kokiri Forest, cross Hyrule Field, go up Zora's River") if v else None,
     "anju_one_cucco": lambda v: ("Anju's minigame finishes after returning 1 cucco", "Kakariko, child: return one cucco to the pen") if v else None,
     "free_bombs": lambda v: ("Bag bombs can be pulled out and thrown without the Goron Bracelet",
                              "Get a Bomb Bag before the bracelet; use a bomb") if v else

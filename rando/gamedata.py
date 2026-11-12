@@ -71,6 +71,16 @@ SKIP_ZELDA_PLAYED = ["Goto_HyruleCastle_EntryMarket", "HyruleCastle_Goto_HyruleC
 # amiibo pouch entry is handed out (PouchSystemActor Pouch_Amiibo)
 SKIP_ZELDA_FLAGS = ["UI_IsFinishChallengeMenuOpenEvent", "HyruleField_ArriveEntrance"]
 SKIP_ZELDA_ITEMS = ["Pouch_Amiibo"]
+# Skip Kaepora Gaebora: his forced first talks. Each is started by stage logic (HoldGameDataHavePlayedEvent) or
+# Dm_SY_BancChangeArrive only while HavePlayedEvent.<scene> is False. Dm_HrlField_0010 is the first Hyrule Field
+# talk (Goto_HyruleCastle_Kaepora_00), which also opens the quest menu and gives the amiibo item (SKIP_ZELDA_FLAGS /
+# _ITEMS); its quest step (Goto_HyruleCastle Step02) is only read by two NPCs' dialogue, and entering the Market moves
+# the quest on to Step02_01 anyway. Left alone: Dm_HrlCastle_0000 (an entrance InitEvent, the same mechanism as the
+# area intros, which didn't skip in testing), Dm_HrlField_0080 (sets DreamWorld_Open), and the optional Lake Hylia
+# and Death Mountain rides (talk only).
+KAEPORA_SCENES = ["Dm_LostWood_0000",                      # outside Kokiri Forest (Lost Woods bridge)
+                  "Dm_HrlField_0010", "Dm_HrlField_0030", "Dm_HrlField_0040",   # Hyrule Field (0040: near Gerudo Valley)
+                  "Dm_ZoraRiver_0000", "Dm_ZoraRiver_0005"]
 # Owning an item: IsGet.<actor> plus, for pouch items, the count in PouchData.<actor> (a one-Int struct). Songs only
 # have the IsGet flag.
 POUCH_STRUCT = "PouchData"
@@ -261,6 +271,13 @@ def planned_changes(st, ocarina_bridge_patched=True):
             out.append(("bool", f, True, "skip_child_zelda", "Set by Kaepora's Hyrule Field scene"))
         for actor in SKIP_ZELDA_ITEMS:
             out.append(("item", actor, None, "skip_child_zelda", "Given in Kaepora's Hyrule Field scene"))
+    if st.get("skip_kaepora"):
+        for ev in KAEPORA_SCENES:
+            out.append(("bool", "HavePlayedEvent." + ev, True, "skip_kaepora", "Kaepora's talk %s counts as already seen" % ev))
+        for f in SKIP_ZELDA_FLAGS:
+            out.append(("bool", f, True, "skip_kaepora", "Set by Kaepora's first Hyrule Field talk"))
+        for actor in SKIP_ZELDA_ITEMS:
+            out.append(("item", actor, None, "skip_kaepora", "Given in Kaepora's first Hyrule Field talk"))
     if st["open_forest"] in ("closed_deku", "open") or st["shuffle_ocarinas"] or st["skip_child_zelda"]:
         # Hyrule Field uses a "first visit" light table (MainField_Bluesky_First: IsForceMainLight, the sun pinned
         # at one angle) until this flag is set, which vanilla does in Saria's bridge goodbye after the Deku Tree.

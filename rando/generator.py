@@ -12,11 +12,12 @@ from . import logic as L
 from . import settings as S
 from .pickups import PickupCloner
 from .qol import (patch_anju, patch_dodongo_bag_bombs, patch_egg_hatch_guard, patch_gs_death,
-                  patch_ocarina_bridge, patch_open_forest_mido, patch_saria_song, patch_song_teaching)
+                  patch_ocarina_bridge, patch_open_forest_mido, patch_saria_song, patch_song_teaching,
+                  patch_small_chests, patch_kokiri_schedules, patch_big_poe_one)
 from .shops import ShopPatcher
 from .world import World, JUNK
 
-VERSION = "0.4.0"
+VERSION = "0.4.3"
 BOMB_LIFT_PARAM = "Component/LiftableParam/Item_Bomb.game__component__LiftableParam.bgyml"
 BOMB_PACKS = ["Pack/Actor/Item_Bomb.pack.zs", "Pack/Actor/Npc_Hylia_ImperialSoldier_Bomb.pack.zs",
               "Pack/Actor/Obj_BombFlower_A_01.pack.zs", "Pack/Actor/Obj_BombFlower_A_04.pack.zs",
@@ -74,10 +75,6 @@ PROGRESSIVE_WALLET = "Wallet_Medium"
 # it is gone after reloading. A randomized chest uses the normal chest event instead.
 ITEM_GET_EVENTS = {"Get_StoneOfForest_GetSword"}
 
-# Small Chests Only: big chest -> small chest. Obj_TBox_A_02 (big) and A_03 (Boss Key) are built on A_01 (their
-# packs carry Obj_TBox_A_01's ActorParam), so only the stage actor's Gyaml changes; NoBake stays NoBake.
-SMALL_CHEST = {"Obj_TBox_A_02": "Obj_TBox_A_01", "Obj_TBox_A_03": "Obj_TBox_A_01",
-               "Obj_TBox_A_02_NoBake": "Obj_TBox_A_01_NoBake", "Obj_TBox_A_03_NoBake": "Obj_TBox_A_01_NoBake"}
 
 
 def refill_container(item):
@@ -545,25 +542,7 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
         emit(rel, orig, F.byml_dump(root), dname)
 
     if plan.st.get("small_chests"):
-        shrink = defaultdict(set)
-        for loc in world.locations:
-            if loc.kind == "chest":
-                for rel, h in loc.stage_refs:
-                    shrink[rel].add(h)
-        n = 0
-        for rel, hashes in sorted(shrink.items()):
-            orig, dname = read(rel)
-            root = F.byml_load(orig)
-            hit = 0
-            for a in root.get("Actors", []):
-                small = SMALL_CHEST.get(a.get("Gyaml"))
-                if small and int(a["Hash"]) in hashes and world.actor_exists(small):
-                    a["Gyaml"] = small
-                    hit += 1
-            if hit:
-                n += hit
-                emit(rel, orig, F.byml_dump(root), dname)
-        progress("Small chests: %d big chest placements now use the small chest" % n)
+        patch_small_chests(world, emit, progress, read)
 
     for rel, edits in sorted(event_edits.items()):
         orig, dname = read(rel)
@@ -612,6 +591,8 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
 
     if plan.st["open_forest"] == "open":
         patch_open_forest_mido(world, emit, progress, read)
+    if plan.st["skip_child_zelda"]:
+        patch_kokiri_schedules(world, emit, progress, read)
     if plan.st["shuffle_songs"] != "vanilla":
         patch_song_teaching(world, emit, progress, read)
     if plan.st["shuffle_weird_egg"] and plan.st["shuffle_npc"]:
@@ -628,6 +609,8 @@ def write_patches(world, plan, placed, out_romfs, progress=print):
 
     if plan.st.get("anju_one_cucco"):
         patch_anju(world, emit, progress, read)
+    if plan.st.get("big_poe_one"):
+        patch_big_poe_one(world, emit, progress, read)
 
     if plan.st.get("skip_cutscenes"):
         # One shared component blocks skipping (opening, credits, title demos); switch it off.

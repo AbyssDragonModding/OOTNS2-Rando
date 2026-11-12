@@ -7,19 +7,19 @@ import zlib
 SETTINGS = [
     # ---- Main Rules
     ("logic_rules", "Main Rules", "Logic", "Logic Rules", "choice",
-     [("glitchless", "Glitchless"), ("none", "No Logic")], "glitchless",
+     [("glitchless", "Glitchless"), ("none", "No Logic (experimental)")], "glitchless",
      "Glitchless: the seed is guaranteed beatable using the conservative remake logic.\n"
      "No Logic: items are placed completely at random; the seed may be unbeatable."),
     ("reachable_locations", "Main Rules", "Logic", "Guarantee Reachable Locations", "choice",
-     [("all", "All"), ("beatable", "Required Only")], "all",
+     [("all", "All"), ("beatable", "Required Only (experimental)")], "all",
      "All: every shuffled location can be reached.\nRequired Only: only beating the game is guaranteed."),
     ("open_forest", "Main Rules", "Open", "Kokiri Forest", "choice",
-     [("closed", "Closed"), ("closed_deku", "Closed Deku (exit open)"), ("open", "Open")], "closed",
+     [("closed", "Closed"), ("closed_deku", "Closed Deku (exit open, experimental)"), ("open", "Open")], "closed",
      "Closed: the Kokiri boy blocks the exit until the Deku Tree is beaten, Mido blocks the Deku Tree.\n"
      "Closed Deku: the exit is open from the start; Mido still wants a sword and shield.\n"
      "Open: both blockers are gone. Switches off the two blocker flags in the default save data."),
     ("open_zora", "Main Rules", "Open", "Zora's Fountain", "choice",
-     [("closed", "Closed"), ("open", "Open")], "closed",
+     [("closed", "Closed"), ("open", "Open (needs further testing)")], "closed",
      "Open: King Zora has already moved aside (the Zora quest starts past Ruto's letter), so the Fountain\n"
      "and Jabu-Jabu can be reached without the letter. Ruto's Letter would be a dead item then, so it\n"
      "is replaced by an empty Bottle (wherever it lands, or at Lake Hylia if freestanding items aren't shuffled)."),
@@ -32,13 +32,13 @@ SETTINGS = [
      "starts open for child Link. Sets the gate's own story flag (Npc_Hylia_Soldier_003_GateOpen), the one\n"
      "the soldier sets when you show him the letter; that flag also opens the Happy Mask Shop. Zelda's\n"
      "Letter is then only needed for the soldier's mask-shop trade."),
-    ("skip_child_zelda", "Main Rules", "Open", "Skip Child Zelda (experimental)", "bool", None, False,
+    ("skip_child_zelda", "Main Rules", "Open", "Skip Child Zelda (needs further testing)", "bool", None, False,
      "A new save starts as if you had already been through Hyrule Castle as a child: you already own\n"
      "whatever Zelda (HC Zelda's Letter), Malon (HC Malon Egg) and Impa (Song from Impa) would have given\n"
      "you. The castle quest counts as complete, so Talon and Malon are back at Lon Lon Ranch and Hyrule\n"
      "Field uses its normal day/night cycle from the start. Those three checks only hold items the save\n"
      "can grant directly (songs and single key items). Untested in-game."),
-    ("skip_epona_race", "Main Rules", "Open", "Skip Epona Race", "bool", None, False,
+    ("skip_epona_race", "Main Rules", "Open", "Skip Epona Race (experimental)", "bool", None, False,
      "Adult Epona is available as soon as you own Epona's Song: the 'Epona obtained' story flag is\n"
      "rewritten to 'has Epona's Song', so Ingo's race isn't needed. Untested in-game."),
     ("saria_song_ocarina", "Main Rules", "Open", "Saria's Song With Just an Ocarina", "bool", None, True,
@@ -48,14 +48,14 @@ SETTINGS = [
      [("vanilla", "Vanilla"), ("song", "Song Locations"), ("anywhere", "Anywhere (experimental)")], "song",
      "Song Locations: songs are shuffled among the 12 song-teaching events.\n"
      "Anywhere: songs can also be found in chests and NPC rewards (untested in the remake)."),
-    ("shuffle_rewards", "Main Rules", "Shuffle", "Shuffle Spiritual Stones/Medallions (experimental)", "choice",
+    ("shuffle_rewards", "Main Rules", "Shuffle", "Shuffle Spiritual Stones/Medallions (needs further testing)", "choice",
      [("vanilla", "Vanilla"), ("reward", "Dungeon Reward Locations"), ("anywhere", "Anywhere")], "vanilla",
      "Dungeon Reward Locations: the Spiritual Stones and Medallions are shuffled among the boss rewards.\n"
      "Anywhere: finishing a dungeon gives a random item, and the stones and medallions can be anywhere.\n"
      "The remake's story checks which dungeons you have beaten, not which stones/medallions you hold, so\n"
      "the Door of Time, the Light Arrows and Ganon's bridge follow the dungeons; the logic does the same.\n"
      "The sage cutscenes still play for the original dungeon. Untested in-game."),
-    ("shuffle_kokiri_sword", "Main Rules", "Shuffle", "Shuffle Kokiri Sword", "bool", None, True,
+    ("shuffle_kokiri_sword", "Main Rules", "Shuffle", "Shuffle Kokiri Sword (experimental)", "bool", None, True,
      "The Kokiri Sword chest joins the item pool. Off keeps the sword in its vanilla chest."),
     ("shuffle_freestanding", "Main Rules", "Shuffle", "Shuffle Freestanding Items", "bool", None, True,
      "Freestanding Pieces of Heart, Fire Arrows (Lake Hylia) and Ruto's Letter."),
@@ -64,24 +64,24 @@ SETTINGS = [
      "On: her reward is random and the Weird Egg is somewhere else. The Cucco only hatches if you\n"
      "actually have the egg (the automatic hatch event checks for it); found later, it should hatch\n"
      "on the game's own timer. Needs NPC rewards shuffled. Untested in-game."),
-    ("shuffle_ocarinas", "Main Rules", "Shuffle", "Shuffle Ocarinas (experimental)", "bool", None, False,
+    ("shuffle_ocarinas", "Main Rules", "Shuffle", "Shuffle Ocarinas (needs further testing)", "bool", None, False,
      "The Fairy Ocarina and the Ocarina of Time join the item pool.\n"
      "Saria's goodbye on the forest bridge (where she hands over the Fairy Ocarina) is switched off, so\n"
      "you have to find an ocarina. Zelda's Ocarina of Time at the castle moat becomes a check; logic\n"
      "expects you to already own an ocarina there, since she teaches the Song of Time right after.\n"
      "Either ocarina plays every song. Partly tested in-game."),
-    ("shuffle_rupees", "Main Rules", "Shuffle", "Shuffle Freestanding Rupees", "bool", None, False,
-     "The 112 green, blue, red and purple rupees lying around the world (Kokiri Forest, Hyrule Field,\n"
-     "Zora's River/Domain/Fountain, Death Mountain, Graveyard, Deku Tree scrub drops) become checks.\n"
+    ("shuffle_rupees", "Main Rules", "Shuffle", "Shuffle Freestanding Rupees (needs further testing)", "bool", None, False,
+     "The 109 green, blue, red and purple rupees lying around the world (Kokiri Forest, Hyrule Field,\n"
+     "Zora's River/Domain/Fountain, Death Mountain, Graveyard) become checks.\n"
      "Each one is collected once (it has its own save flag). Silver rupee puzzles are not touched."),
     ("shuffle_heart_containers", "Main Rules", "Shuffle", "Shuffle Boss Heart Containers", "bool", None, True,
      "Heart Containers dropped by bosses."),
     ("shuffle_npc", "Main Rules", "Shuffle", "Shuffle NPC & Minigame Rewards", "bool", None, True,
      "Gifts such as the Weird Egg, Zelda's Letter, Goron Bracelet, Silver Scale, Gerudo Pass,\n"
      "Light Arrows, Anju's bottle, fishing, frogs, Dampe, Skull Kid and other minigame prizes."),
-    ("shuffle_fairies", "Main Rules", "Shuffle", "Shuffle Great Fairy Rewards", "bool", None, True,
+    ("shuffle_fairies", "Main Rules", "Shuffle", "Shuffle Great Fairy Rewards (experimental)", "bool", None, True,
      "Din's Fire, Farore's Wind, Nayru's Love and the three Great Fairy blessings."),
-    ("shuffle_house", "Main Rules", "Shuffle", "Shuffle Skulltula House Rewards", "bool", None, True,
+    ("shuffle_house", "Main Rules", "Shuffle", "Shuffle Skulltula House Rewards (needs further testing)", "bool", None, True,
      "Rewards for 10/20/30/40/50 Gold Skulltula Tokens. The two wallets become progressive wallets\n"
      "found in chests (the first gives the Adult's Wallet, the second the Giant's Wallet)."),
     ("tokensanity", "Main Rules", "Shuffle", "Tokensanity", "choice",
@@ -97,8 +97,8 @@ SETTINGS = [
      "Edits the shelf actor packs, the actor table and shop text; untested in-game."),
     # ---- Dungeon items
     ("maps_compasses", "Dungeon Items", "Dungeon Items", "Maps & Compasses", "choice",
-     [("vanilla", "Vanilla"), ("own", "Own Dungeon"), ("remove", "Remove (replaced by junk)"),
-      ("start_with", "Start With")], "own",
+     [("vanilla", "Vanilla"), ("own", "Own Dungeon (experimental)"), ("remove", "Remove (replaced by junk, experimental)"),
+      ("start_with", "Start With (experimental)")], "own",
      "Own Dungeon: maps and compasses stay inside their own dungeon. The remake decides a key's dungeon\n"
      "from the dungeon the chest is in, so 'Anywhere' (keysanity) is not possible.\n"
      "Remove: their checks hold a Blue Rupee and you never get them.\n"
@@ -113,7 +113,7 @@ SETTINGS = [
      "Own Dungeon shuffles the boss key inside its dungeon (same caveat as small keys)."),
     # ---- Other
     ("item_pool", "Other", "Item Pool", "Item Pool", "choice",
-     [("balanced", "Balanced"), ("scarce", "Scarce"), ("minimal", "Minimal")], "balanced",
+     [("balanced", "Balanced"), ("scarce", "Scarce (experimental)"), ("minimal", "Minimal (experimental)")], "balanced",
      "Balanced: the vanilla item counts.\nScarce: half of the Pieces of Heart and Heart Containers become rupees.\n"
      "Minimal: all Pieces of Heart and Heart Containers become rupees."),
     ("skip_cutscenes", "Other", "Quality of Life", "Make All Cutscenes Skippable", "bool", None, True,
@@ -139,16 +139,24 @@ SETTINGS = [
     ("anju_one_cucco", "Other", "Quality of Life", "Anju Needs Only 1 Cucco", "bool", None, True,
      "Return a single cucco to Anju's pen to finish her minigame and get the reward.\n"
      "Changes the fence-count check in the minigame logic and Anju's 'cuccos left' counter."),
+    ("big_poe_one", "Other", "Quality of Life", "Big Poe Buyer Needs Only 1 Big Poe (experimental)", "bool", None, False,
+     "Sell a single Big Poe to the ghost shop in the adult Market to get his reward (normally ten,\n"
+     "1000 points). Changes the 900-point check in his sale flow to 0, so your first sale is the last one."),
+    ("skip_kaepora", "Other", "Quality of Life", "Skip Kaepora Gaebora (experimental)", "bool", None, False,
+     "Kaepora Gaebora's first talk in each area counts as already seen: outside Kokiri Forest (Lost Woods\n"
+     "bridge), his three Hyrule Field meetings and his two at Zora's River. The things his first Hyrule\n"
+     "Field talk unlocks (the quest menu, the amiibo menu item) are set too. His optional rides at Lake\n"
+     "Hylia and Death Mountain, and his talk in front of Hyrule Castle, are unchanged."),
     ("free_bombs", "Other", "Quality of Life", "Bombs Usable Without Goron Bracelet", "bool", None, True,
      "In the remake, bombs pulled from the bag are 'lifted' and need the Goron Bracelet's strength.\n"
      "Vanilla always gives the bracelet first; a randomizer may not. This lowers the bag bomb's lift\n"
      "requirement so bombs work as soon as you have a Bomb Bag. Bomb Flowers still need the bracelet.\n"
      "Turned off, the logic requires the Goron Bracelet for bombs instead."),
-    ("small_chests", "Other", "Quality of Life", "Small Chests Only (experimental)", "bool", None, False,
+    ("small_chests", "Other", "Quality of Life", "Small Chests Only (needs further testing)", "bool", None, False,
      "Every big chest (including Boss Key chests) uses the small chest instead, so opening one\n"
      "skips the long big-chest animation. Only the chest's actor changes: its item, flags and\n"
      "position stay the same. The chest size no longer hints at what's inside."),
-    ("excluded_locations", "Other", "Excluded", "Excluded Locations", "list", None, [],
+    ("excluded_locations", "Other", "Excluded", "Excluded Locations (experimental)", "list", None, [],
      "Locations that never hold progression or dungeon items (only rupees, ammo, hearts)."),
     ("create_spoiler", "Other", "Output", "Create Spoiler Log", "bool", None, True,
      "Write spoiler.txt / spoiler.json next to the mod."),

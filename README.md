@@ -241,11 +241,15 @@ The GUI explains every option when you hover over it. In short:
 |---|---|
 | **Main Rules** | Logic (glitchless or none); open Kokiri Forest, Zora's Fountain, the Door of Time and Death Mountain; skip child Zelda (experimental); skip Epona's race; Saria's Song with just an ocarina; what gets shuffled: songs, Spiritual Stones and Medallions (experimental, in boss rewards or anywhere), Kokiri Sword, Weird Egg, ocarinas, freestanding items, freestanding rupees, boss Heart Containers, NPC and minigame rewards, Great Fairies, Skulltula House rewards, Gold Skulltula tokens (Tokensanity) and shop items (Shopsanity) |
 | **Dungeon Items** | Maps & Compasses (vanilla, own dungeon, removed or start with), small keys and boss keys |
-| **Other** | Item pool size; quality of life (skippable cutscenes, no area intros (experimental), bombs without the Goron Bracelet, bag bombs open Dodongo's Cavern, Anju needs 1 cucco, ammo chests need their bag, small chests only (experimental)); spoiler log |
+| **Other** | Item pool size; quality of life (skippable cutscenes, no area intros (experimental), bombs without the Goron Bracelet, bag bombs open Dodongo's Cavern, Anju needs 1 cucco, ammo chests need their bag, small chests only, Big Poe buyer needs 1 Big Poe, skip Kaepora Gaebora); spoiler log |
 | **Exclusions** | Locations that only ever hold minor items |
 | **Not Supported** | Classic randomizer options the remake's data can't support yet, and why |
 
-Settings marked **experimental** work in offline checks but haven't been confirmed in a full playthrough.
+Labels in the randomizer show how far each setting has been tested in-game:
+- **(experimental):** works in offline checks but hasn't been tried in-game yet.
+- **(needs further testing):** partly confirmed in-game; see the **Partly working** table below.
+- **No label:** confirmed working (the **Working** table). Vanilla and Off choices leave that part of the
+  game unchanged.
 These are the ones most worth testing.
 
 ### Test results
@@ -259,15 +263,16 @@ yet.
 | Setting | Value tested | Version |
 |---|---|---|
 | Kokiri Forest | Open, Closed | 0.2.1 |
-| Open Death Mountain | Off | 0.3.1 |
+| Open Death Mountain | Off, On | 0.3.1, 0.4.0 |
 | Saria's Song With Just an Ocarina | On | 0.2.1 |
 | Shuffle Songs | Song Locations | 0.3.1 |
-| Shuffle Kokiri Sword | Off | 0.2.1 |
+| Shuffle Kokiri Sword (experimental) | Off | 0.2.1 |
 | Shuffle Weird Egg (experimental) | Off | 0.3.1 |
 | Shuffle Freestanding Items | On | 0.2.1 |
 | Shuffle Freestanding Rupees | On, Off | 0.2.1, 0.3.1 |
 | Shuffle Boss Heart Containers | On | 0.3.1 |
-| Tokensanity | All Tokens, Dungeons Only | 0.2.1, 0.3.1 |
+| Tokensanity | All Tokens, Dungeons Only, Overworld Only | 0.2.1, 0.3.1, 0.4.0 |
+| Shuffle NPC & Minigame Rewards | On | 0.4.2 |
 | Make All Cutscenes Skippable | On | 0.2.1 |
 | Bag Bombs Open Dodongo's Cavern | On | 0.3.1 |
 | Refills Need Their Item | On | 0.2.1 |
@@ -278,10 +283,13 @@ yet.
 
 | Setting | Value tested | Version | Notes |
 |---|---|---|---|
-| Zora's Fountain | Open | 0.3.1 | Ruto's Letter at Lake Hylia was correctly replaced by an empty bottle, but King Zora hadn't moved. Fixed in 0.4.0: the Zora quest now starts where showing him the letter leaves it. |
-| Shuffle Ocarinas (experimental) | On | 0.3.1 | Crossing the forest bridge after the Deku Tree no longer plays Saria's goodbye or gives the Fairy Ocarina, as intended. Saria is there for her opening greeting outside Link's house (fixed in 0.3.1). Finding the Ocarina of Time before the Fairy Ocarina works. The Ocarina of Time check itself hasn't been tested yet. |
-| Shuffle NPC & Minigame Rewards | On | 0.3.1 | Child fishing and the Lost Woods slingshot targets tested. The Big Poe buyer always gave the bottle: it wasn't a check yet. Added as "Market Big Poe Bottle" in 0.4.0. |
-| Shuffle Skulltula House Rewards | On | 0.3.1 | The 20+ token rewards were random, but the 10 token reward was still the Adult's Wallet (the wallets were kept vanilla on purpose). Since 0.4.0 all five are random and the wallets are in chests. |
+| Zora's Fountain (Open needs further testing) | Open | 0.3.1 | Ruto's Letter at Lake Hylia was correctly replaced by an empty bottle, but King Zora hadn't moved. Fixed in 0.4.0: the Zora quest now starts where showing him the letter leaves it. |
+| Skip Child Zelda (needs further testing) | On | 0.4.1 | The new save started with its items and Hyrule Field had day and night from the start, so the castle quest counts as complete. Malon and Talon at Lon Lon Ranch not checked yet. With a Closed forest, Mido was gone in 0.4.0 but his invisible wall still blocked the Deku Tree; since 0.4.1 he guards the path and blocks you without a sword and shield. |
+| Shuffle Spiritual Stones/Medallions (needs further testing) | Anywhere | 0.4.2 | The Shadow Medallion turned up at a freestanding rupee spot, and beating the Deku Tree gave its random item (a Gold Skulltula token), as intended. The other dungeons haven't been tested yet. |
+| Small Chests Only (needs further testing) | On | 0.4.2 | Every big chest in the Deku Tree is a small chest and opens with the short animation. The Kokiri Sword chest stays big when the sword isn't shuffled, because its chest plays the sword scene, as intended. Other dungeons haven't been tested yet. (0.4.0 still played the long sequence; 0.4.1's chests couldn't be opened.) |
+| Shuffle Freestanding Rupees (needs further testing) | On | 0.4.2 | An item dropped by the Deku Scrub in the Deku Tree's first room sat inside its flower, behind an invisible wall. The three Deku Tree scrub drops are no longer rupee checks since 0.4.3. |
+| Shuffle Ocarinas (needs further testing) | On | 0.3.1 | Crossing the forest bridge after the Deku Tree no longer plays Saria's goodbye or gives the Fairy Ocarina, as intended. Saria is there for her opening greeting outside Link's house (fixed in 0.3.1). Finding the Ocarina of Time before the Fairy Ocarina works. The Ocarina of Time check itself hasn't been tested yet. |
+| Shuffle Skulltula House Rewards (needs further testing) | On | 0.4.2 | All five rewards (10-50 tokens) are random in the 0.4.2 spoiler. Turning them in hasn't been tested yet. In 0.3.1 the 10 token reward was still the Adult's Wallet. |
 
 **Not working**
 

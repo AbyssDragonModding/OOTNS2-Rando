@@ -20,7 +20,7 @@ before the public 0.1.0 release.
 | Shuffle Songs (Song Locations / Anywhere) | Same; *Anywhere* is experimental |
 | Shuffle Spiritual Stones/Medallions | Vanilla / Dungeon Reward Locations / Anywhere; experimental (explained below) |
 | Freestanding items, boss Heart Containers | Toggles |
-| Shuffle Freestanding Rupees | New: 112 world rupees become checks (off by default) |
+| Shuffle Freestanding Rupees | New: 109 world rupees become checks (off by default) |
 | NPC & minigame rewards, Great Fairies, Skulltula House | Toggles |
 | Tokensanity (Off / Dungeons / Overworld / All) | Same |
 | Shuffle Ocarinas | Toggle, experimental (explained below) |
@@ -28,7 +28,7 @@ before the public 0.1.0 release.
 | Maps & Compasses / Small Keys / Boss Keys | Vanilla / Own Dungeon (keys experimental) / Remove (maps) / **Start With** (maps, explained below) |
 | Item Pool (Balanced / Scarce / Minimal) | Same (Plentiful not available) |
 | Excluded Locations | Same |
-| Quality of Life | **Make All Cutscenes Skippable**, **Bombs Usable Without Goron Bracelet**, **Anju Needs Only 1 Cucco**, **Refills Need Their Item** (all on by default); **Bag Bombs Open Dodongo's Cavern** (off); **Skip Area Intro Cutscenes** (experimental, off); **Small Chests Only** (experimental, off) |
+| Quality of Life | **Make All Cutscenes Skippable**, **Bombs Usable Without Goron Bracelet**, **Anju Needs Only 1 Cucco**, **Refills Need Their Item** (all on by default); **Bag Bombs Open Dodongo's Cavern** (off); **Skip Area Intro Cutscenes** (experimental, off); **Small Chests Only**, **Big Poe Buyer Needs Only 1 Big Poe**, **Skip Kaepora Gaebora** (experimental, off) |
 | Settings string | Same idea (import / copy) |
 
 The **Not Supported** tab lists the classic options that can't be done yet, and why.
@@ -212,6 +212,12 @@ A new save starts as if Hyrule Castle had already been done as a child:
 - **Unknowns.** It hasn't been tested whether a new save picks up these Enum and Int defaults like it does
   the plain Bools. It also hasn't been tested whether a later scene could still move the castle quest back.
   If Kaepora, Zelda or the Market intro shows up anyway, please report it.
+- **Kokiri.** Every child Kokiri's AI schedule ends with a condition on `Goto_HyruleCastle_IsCompleted_Exp`
+  (where they stand once you've met Zelda). With the quest complete from the start, Mido left his post while
+  his invisible wall (`KokiriForest_Npc_Kokiri_Mido_Child_Blocker`, cleared only by his own sword-and-shield
+  talk) stayed, so a Closed forest couldn't reach the Deku Tree (0.4.0 report). Since 0.4.1 that condition is
+  removed from the 12 child Kokiri schedules (`Component/AIScheduleParam/Npc_Kokiri_*_Child`), so they follow
+  their Deku Tree quest schedules as before the castle trip.
 
 ## Shuffle Spiritual Stones/Medallions (experimental)
 
@@ -364,6 +370,36 @@ item came back whenever the room reloaded.
 The earlier attempt at this (giving `Item_Arrow_*` packs the Boomerang's physics) didn't make anything
 collectible, and it has been removed.
 
+## Big Poe buyer needs only 1 Big Poe (experimental)
+
+The ghost shop in the adult Market (`Npc_Hylia_048_BottleShop`) gives 100 points per Big Poe. Before each sale
+its flow compares `GhostShop_CouponNum` with 900 (`EventQueryIsGameDataInt`): below that it's a normal sale, at
+900 or more it's the final sale (`Sell_AfterCheckingLoseMoney_900`), which completes `SubEvent_GhostShop` and
+gives his reward (the **Market Big Poe Bottle** check). The option sets that 900 to 0, so the first Big Poe sold
+is the final sale. The logic still expects Epona, the Bow and a bottle.
+
+## Skip Kaepora Gaebora (experimental)
+
+His forced first talks count as already seen (`HavePlayedEvent.<scene>` True). Each one is started by stage logic
+(`HoldGameDataHavePlayedEvent` in a `*_Prefab` logic module) or by `Dm_SY_BancChangeArrive`, only while that flag
+is False:
+
+| Scene | Where |
+|---|---|
+| `Dm_LostWood_0000` | Outside Kokiri Forest (the Lost Woods bridge) |
+| `Dm_HrlField_0010` | First Hyrule Field talk (`Goto_HyruleCastle:Goto_HyruleCastle_Kaepora_00`) |
+| `Dm_HrlField_0030`, `Dm_HrlField_0040` | Hyrule Field (0040 after visiting Gerudo Valley) |
+| `Dm_ZoraRiver_0000`, `Dm_ZoraRiver_0005` | Zora's River |
+
+The first Hyrule Field talk also opens the quest menu (`UI_IsFinishChallengeMenuOpenEvent`), sets
+`HyruleField_ArriveEntrance` and gives the amiibo menu item (`Pouch_Amiibo`); those are set too, as Skip Child
+Zelda does. Its quest step (`Goto_HyruleCastle` Step02) is left alone: only two NPCs' dialogue reads it, and
+entering the Market moves the quest on to Step02_01. Left alone:
+- `Dm_HrlCastle_0000` in front of Hyrule Castle. It's an entrance `InitEvent`, the same mechanism as the area
+  intros, which didn't skip in testing.
+- `Dm_HrlField_0080` (sets `DreamWorld_Open`).
+- His optional rides at Lake Hylia and Death Mountain, which only start when you talk to him.
+
 ## Shopsanity
 
 A shop shelf is a generic `Shop_Item_Base` actor whose pack says what it sells. For each randomized shelf the
@@ -389,13 +425,32 @@ both of those become 1 too. Her reward stays randomized.
 
 ## Small Chests Only (experimental)
 
-Off by default. Every chest location whose stage actor is a big chest (`Obj_TBox_A_02`) or a Boss Key chest
-(`Obj_TBox_A_03`), or their `_NoBake` versions, is switched to the small chest (`Obj_TBox_A_01` /
-`Obj_TBox_A_01_NoBake`). The big chests' packs are built on the small one (they carry its ActorParam), so
-only the actor's `Gyaml` changes: its hash, links, `Dynamic` drop fields and save flag stay the same. That's
-51 placements, counting the child and adult copies of a stage separately. Shop chests (Treasure Chest Game)
-and the invisible Lens chests are left alone. Untested: whether the big chests' stage collision or
-lighting ("Bake") expects the bigger model.
+Off by default (`rando/qol.py`, `patch_small_chests`). Two changes:
+
+- **Model.** Every stage actor that is a big chest (`Obj_TBox_A_02`) or a Boss Key chest (`Obj_TBox_A_03`),
+  or their `_NoBake` versions, becomes the small chest (`Obj_TBox_A_01` / `Obj_TBox_A_01_NoBake`). The big
+  chests' packs are built on the small one (they carry its ActorParam), so only the actor's `Gyaml` changes:
+  its hash, links, `Dynamic` drop fields and save flag stay the same. That's 51 placements, counting the
+  child and adult copies of a stage separately.
+- **Opening sequence.** The sequence comes from the chest's `GetEventName` blackboard string:
+  `Dm_SY_TreasureboxSmall` for the small chest, `Dm_SY_Treasurebox` (the long one) for the big chest. About
+  30 big chests override it per placement (`Dynamic.GetEventName`, a row of `RSDB/EventSetting`) with a script
+  that ends in a jump (`EventTransition`) to `Dm_SY_Treasurebox`.
+  - 0.4.0 only changed the model, so those chests (the Deku Tree Slingshot chest, for one) still played the
+    long sequence.
+  - 0.4.1 pointed those jumps at `Dm_SY_TreasureboxSmall`. The chests then couldn't be opened at all.
+  - Since 0.4.2, scripts that only add a Navi line or a camera move (the `NaviChat` map/compass/item lines,
+    the Forest Temple Bow and Boss Key, the Goron Bomb Bag, Hover Boots, Mirror Shield, Lens of Truth and
+    Water Temple Longshot chests) are removed from the chest, so it opens like any small chest. That's how
+    the randomized Kokiri Sword chest already works. The Navi line is lost. Chests whose script runs story
+    events stay vanilla big chests (`BIG_CHEST_STORY_EVENTS`): Nabooru taken at the Colossus, the Serenade of
+    Water, the two Ruto chests in Jabu-Jabu, Dampé's race prize, Ganon's Castle's Golden Gauntlets, the Ice
+    Arrow side quest and the vanilla Kokiri Sword. That's 40 small and 11 big placements.
+  - Major items still get Link's item-held pose and Navi's reaction in the small sequence; that part follows
+    the item, not the chest.
+
+Shop chests (Treasure Chest Game) and the invisible Lens chests are left alone. Untested: whether the big
+chests' stage collision or lighting ("Bake") expects the bigger model.
 
 ## Requested but not possible from the game data
 
@@ -433,13 +488,16 @@ Cutscenes aren't removed outright, because the remake grants items and sets stor
 - **18 freestanding items**: Pieces of Heart, Fire Arrows at Lake Hylia and Ruto's Letter. Freestanding small
   keys follow the Small Keys setting.
 - **8 boss Heart Containers**, **100 Gold Skulltulas** (Tokensanity only)
-- **59 event rewards**: 12 songs, 9 dungeon rewards, 6 Great Fairies, 28 NPC and minigame rewards (including
+- **59 event rewards**: 12 songs, 9 dungeon rewards, 6 Great Fairies, 29 NPC and minigame rewards (including
   the upgrade NPCs and minigames listed below), and 5 Skulltula House rewards
 - **Up to 12 shop shelves** (Shopsanity)
-- **112 freestanding rupees** (**Shuffle Freestanding Rupees**, off by default):
+- **109 freestanding rupees** (**Shuffle Freestanding Rupees**, off by default):
   - **Where:** green, blue, red and purple rupees in Hyrule Field (26), Zora's River (20), Kokiri Forest
-    (17), Zora's Fountain (16), Death Mountain Crater (10), the Graveyard (8), Death Mountain Trail (6),
-    Zora's Domain (6) and the Deku Scrub drops in the Deku Tree (3).
+    (17), Zora's Fountain (16), Death Mountain Crater (10), the Graveyard (8), Death Mountain Trail (6) and
+    Zora's Domain (6).
+  - **Not the Deku Tree scrub drops** (since 0.4.3): the three `ScrubDekuRupee_*` rupees appear inside the
+    beaten Deku Scrub's flower (Presence `Enemy_Scrub_Deku_ItemDrop_0N`). A rupee there can be collected,
+    but an item placed there sat behind the flower's collision and couldn't be picked up (0.4.2 report).
   - **Collected once:** each rupee placement has its own save flag in `Bool64bitKey`, like a freestanding
     Piece of Heart, so an item placed there doesn't respawn.
   - **Patching:** the actor's `Gyaml` is swapped, and placements shared by the child and adult stages
@@ -448,7 +506,7 @@ Cutscenes aren't removed outright, because the remake grants items and sets stor
     as child or the Iron Boots as adult. The others follow their area's rules.
   - **Left alone:** silver rupees are puzzle pieces with linked counters, so they aren't touched.
 
-These are always left vanilla: the Ocarinas (unless Shuffle Ocarinas is on), the Master Sword, the adult trade sequence, the other capacity
+These are always left vanilla: the Ocarinas (unless Shuffle Ocarinas is on), the Master Sword, the adult trade sequence's items (its final reward, the Biggoron's Sword, is the **DMT Biggoron** check), the Treasure Chest Game (its prize chest shows its prize through a minigame-only preview model), the other capacity
 upgrades (bags and quivers), the bazaar and potion shops, Business Scrubs, cows and the Treasure Chest Game. The
 trap chests and the Hall of Fallen Foes are left untouched.
 

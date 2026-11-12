@@ -4,6 +4,75 @@ All notable changes to the randomizer. Versions are `Major.Minor.Patch`: a new s
 minor version, a fix raises the patch version. The same seed and settings string make a different mod in a
 different version.
 
+## 0.4.3 - 2026-11-11
+
+### Fixed
+- **Shuffle Freestanding Rupees**: an item dropped by a Deku Scrub in the Deku Tree landed inside its flower,
+  behind an invisible wall, so it couldn't be picked up. The three Deku Tree scrub drops are no longer rupee
+  checks (109 instead of 112). Seeds made with 0.4.2 or older can have an important item stuck there, so
+  make a new seed.
+
+- **LLR Talons Chickens**: buying milk from Talon and refilling a bottle on later wins also handed out the
+  check's item, so it could be collected again and again. Only his first-win prize is the check now.
+
+### Added
+- **DMT Biggoron** (Shuffle NPC & Minigame Rewards): the Biggoron's Sword at the end of the adult trade
+  sequence is a check. The trade items themselves stay vanilla.
+- **Big Poe Buyer Needs Only 1 Big Poe** (Other > Quality of Life, experimental, off by default).
+- **Skip Kaepora Gaebora** (Other > Quality of Life, experimental, off by default): his first talks outside
+  Kokiri Forest, in Hyrule Field and at Zora's River count as already seen.
+
+### Changed
+- **Shuffle NPC & Minigame Rewards** is no longer experimental: all 28 of its checks were randomized in a
+  0.4.2 test seed, alongside earlier in-game checks.
+- Partly confirmed settings are now labelled **(needs further testing)** in the randomizer instead of
+  (experimental): Zora's Fountain's Open, Skip Child Zelda, Shuffle Spiritual Stones/Medallions, Shuffle
+  Ocarinas, Shuffle Freestanding Rupees, Shuffle Skulltula House Rewards and Small Chests Only.
+- Checked against the full list of minigames and NPC rewards: every one with an item reward is a check,
+  except the Treasure Chest Game (its prize chest needs a minigame-only preview model for each prize) and
+  Medigoron's Giant's Knife (bought, like a shop).
+
+### Test results (0.4.2 seed)
+- Small Chests Only: every big chest in the Deku Tree was small and opened with the short animation. The
+  Kokiri Sword chest stays big when the sword isn't shuffled (its chest plays the sword scene).
+- Shuffle Spiritual Stones/Medallions: Anywhere: beating the Deku Tree gave its random item.
+- Shuffle Skulltula House Rewards: all five rewards random in the spoiler.
+
+## 0.4.2 - 2026-11-11
+
+### Fixed
+- **Small Chests Only**: in 0.4.1 the swapped chests couldn't be opened. The 0.4.1 change (sending the big
+  chests' scripts to the small chest's opening) is undone. Instead, chests whose script only adds a Navi line
+  or a camera move lose that script and open like normal small chests. The eleven chests whose script runs
+  a story event (Nabooru, the Serenade of Water, Ruto in Jabu-Jabu, Dampé's race, Ganon's Castle's Golden
+  Gauntlets, the Ice Arrow quest, the vanilla Kokiri Sword) stay big chests.
+
+### Changed
+- Every setting or option that isn't confirmed in-game is now marked experimental: Kokiri Forest's Closed
+  Deku, Zora's Fountain's Open, No Logic, Required Only, Skip Epona Race, Shuffle Kokiri Sword, Shuffle NPC &
+  Minigame Rewards, Shuffle Great Fairy Rewards, Shuffle Skulltula House Rewards, every Maps & Compasses
+  option other than Vanilla, the Scarce and Minimal item pools, and Excluded Locations.
+
+### Test results (0.4.1 seed)
+- Skip Child Zelda with a Closed forest: Mido now blocks the way without a sword and shield (the 0.4.1 fix).
+
+## 0.4.1 - 2026-11-11
+
+### Fixed
+- **Skip Child Zelda** with a Closed forest: Mido was gone but his invisible wall still blocked the Deku
+  Tree, even with a sword and shield. The Kokiri schedules read the Hyrule Castle quest, which the setting
+  completes, so Mido had moved to where he stands after you've met Zelda. The Kokiri now stay on their
+  before-the-castle schedules, and Mido guards the path until you show him a sword and shield.
+- **Small Chests Only**: the swapped chests still played the long big-chest sequence. About 30 big chests
+  run their own script (a Navi line or story flags) that jumps to the big-chest sequence; those jumps now go
+  to the small chest's sequence. Every big chest in the game is now swapped, not only the randomized ones.
+
+### Test results (0.4.0 seed)
+- Working: Open Death Mountain (On), Tokensanity (Overworld Only).
+- Partly working: Skip Child Zelda (starting items and day/night confirmed; the Mido bug is fixed above),
+  Shuffle Spiritual Stones/Medallions: Anywhere (a medallion at a freestanding spot works; dungeon rewards
+  not tested yet), Small Chests Only (fixed above).
+
 ## 0.4.0 - 2026-11-11
 
 ### Added

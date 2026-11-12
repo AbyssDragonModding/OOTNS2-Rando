@@ -285,6 +285,9 @@ SPECIAL = {
     "light_arrows": lambda s: s.adult and s.shadow_done and s.spirit_done,
     "kak_child": lambda s: s.hf_child,
     "llr_child": lambda s: s.hf_child,
+    # the whole adult trade sequence: Kakariko, Lost Woods, Kokiri Forest, the Gerudo Valley carpenter, the
+    # Death Mountain summit, King Zora and the Lake Hylia lab (its timers can be done on foot)
+    "biggoron": lambda s: s.adult and s.gv_adult and s.zd_adult,
     "big_poes": lambda s: s.epona and bow(s) and bottle(s),     # ten Big Poes in Hyrule Field, on horseback
     "fishing_child": lambda s: s.hf_child,
     "fishing_adult": lambda s: s.adult,
